@@ -93,7 +93,7 @@ ssize_t readn(int fd, std::string &inBuffer) {
   return readSum;
 }
 
-ssize_t writen(int fd, void *buff, size_t n) {
+ssize_t writen(int fd, void *buff, size_t n) {//写重载
   size_t nleft = n;
   ssize_t nwritten = 0;
   ssize_t writeSum = 0;
@@ -101,10 +101,10 @@ ssize_t writen(int fd, void *buff, size_t n) {
   while (nleft > 0) {
     if ((nwritten = write(fd, ptr, nleft)) <= 0) {
       if (nwritten < 0) {
-        if (errno == EINTR) {
+        if (errno == EINTR) {//表示由于信号中断，没写成功任何数据。
           nwritten = 0;
           continue;
-        } else if (errno == EAGAIN) {
+        } else if (errno == EAGAIN) {//提示你的应用程序现在没有数据可写请稍后再试。
           return writeSum;
         } else
           return -1;

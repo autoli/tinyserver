@@ -30,7 +30,7 @@ class TimerNode {
   std::shared_ptr<HttpData> SPHttpData;
 };
 
-struct TimerCmp {
+struct TimerCmp {//比较两个时间节点的过期时间
   bool operator()(std::shared_ptr<TimerNode> &a,
                   std::shared_ptr<TimerNode> &b) const {
     return a->getExpTime() > b->getExpTime();
@@ -47,6 +47,6 @@ class TimerManager {
  private:
   typedef std::shared_ptr<TimerNode> SPTimerNode;
   std::priority_queue<SPTimerNode, std::deque<SPTimerNode>, TimerCmp>
-      timerNodeQueue;
+      timerNodeQueue;//用优先级队列保存时间节点，小根堆并采用惰性删除
   // MutexLock lock;
 };

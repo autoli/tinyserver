@@ -32,8 +32,15 @@ void AppendFile::append(const char* logline, const size_t len) {
   }
 }
 
+//fflush()的作用是用来刷新缓冲区，
+//fflush(stdin)刷新标准输入缓冲区，把输入缓冲区里的东西丢弃； 
+//fflush(stdout)刷新标准输出缓冲区，把输出缓冲区里的东西强制打印到标准输出设备上。
 void AppendFile::flush() { fflush(fp_); }
 
+//fwrite的线程不安全版本
+//函数原型：size_t 
+//fwrite(const void* buffer, size_t size, size_t count, FILE * stream);
+//含义：将指定缓冲区中的内容（buffer），部分或全部写入到指定的文件中（stream）
 size_t AppendFile::write(const char* logline, size_t len) {
   return fwrite_unlocked(logline, 1, len, fp_);
 }

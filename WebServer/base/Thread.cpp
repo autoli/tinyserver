@@ -22,9 +22,17 @@ __thread char t_tidString[32];
 __thread int t_tidStringLength = 6;
 __thread const char* t_threadName = "default";
 }
-
+//各个进程独立，所以会有不同进程中线程号相同节的情况。
+//那么这样就会存在一个问题，我的进程p1中的线程pt1要与进程p2中的线程pt2通信怎么办，
+//进程id不可以，线程id又可能重复，所以这里会有一个真实的线程id唯一标识，tid。
+//glibc没有实现gettid的函数，所以我们可以通过linux下的系统调用syscall(SYS_gettid)来获得。
 pid_t gettid() { return static_cast<pid_t>(::syscall(SYS_gettid)); }
 
+//函数说明:snprintf
+// 最多从源串中拷贝size－1个字符到目标串中，然后再在后面加一个0。所以如果目标串的大小为size的话，将不会溢出。
+// 函数返回值:
+// 若成功则返回欲写入的字符串长度，若出错则返回负值。
+//这里是把唯一标识符写入字符串中保存
 void CurrentThread::cacheTid() {
   if (t_cachedTid == 0) {
     t_cachedTid = gettid();
@@ -52,8 +60,8 @@ struct ThreadData {
     latch_ = NULL;
 
     CurrentThread::t_threadName = name_.empty() ? "Thread" : name_.c_str();
-    prctl(PR_SET_NAME, CurrentThread::t_threadName);
-
+    prctl(PR_SET_NAME, CurrentThread::t_threadName); //返回调用进程的进程名字给参数t_threadName; 
+   
     func_();
     CurrentThread::t_threadName = "finished";
   }

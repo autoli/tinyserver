@@ -9,9 +9,13 @@
 #include "EventLoop.h"
 #include "Util.h"
 #include "time.h"
+#include <fstream>
+#include <string>
+#include <sstream>
 
 using namespace std;
-
+//宏初始化pthread_once_t控制变量
+//pthread_once_t once = PTHREAD_ONCE_INIT; 
 pthread_once_t MimeType::once_control = PTHREAD_ONCE_INIT;
 std::unordered_map<std::string, std::string> MimeType::mime;
 
@@ -102,8 +106,8 @@ void MimeType::init() {
 }
 
 std::string MimeType::getMime(const std::string &suffix) {
-  pthread_once(&once_control, MimeType::init);
-  if (mime.find(suffix) == mime.end())
+  pthread_once(&once_control, MimeType::init);//该线程执行一次初始化
+  if (mime.find(suffix) == mime.end())//寻找前缀
     return mime["default"];
   else
     return mime[suffix];
@@ -120,7 +124,7 @@ HttpData::HttpData(EventLoop *loop, int connfd)
       nowReadPos_(0),
       state_(STATE_PARSE_URI),
       hState_(H_START),
-      keepAlive_(false) {
+      keepAlive_(false) {//将读写时间与Httpdata事件绑定
   // loop_->queueInLoop(bind(&HttpData::setHandlers, this));
   channel_->setReadHandler(bind(&HttpData::handleRead, this));
   channel_->setWriteHandler(bind(&HttpData::handleWrite, this));
@@ -136,7 +140,7 @@ void HttpData::reset() {
   hState_ = H_START;
   headers_.clear();
   // keepAlive_ = false;
-  if (timer_.lock()) {
+  if (timer_.lock()) {//尝试调用Lock()时才会有可能临时拥有对象
     shared_ptr<TimerNode> my_timer(timer_.lock());
     my_timer->clearReq();
     timer_.reset();
@@ -157,6 +161,7 @@ void HttpData::handleRead() {
   do {
     bool zero = false;
     int read_num = readn(fd_, inBuffer_, zero);
+    std::cout<<123<<std::endl;
     LOG << "Request: " << inBuffer_;
     if (connectionState_ == H_DISCONNECTING) {
       inBuffer_.clear();
@@ -287,7 +292,7 @@ void HttpData::handleConn() {
       int timeout = DEFAULT_EXPIRED_TIME;
       if (keepAlive_) timeout = DEFAULT_KEEP_ALIVE_TIME;
       if ((events_ & EPOLLIN) && (events_ & EPOLLOUT)) {
-        events_ = __uint32_t(0);
+        events_ = __uint32_t(0);//清除
         events_ |= EPOLLOUT;
       }
       // events_ |= (EPOLLET | EPOLLONESHOT);
@@ -534,7 +539,7 @@ AnalysisState HttpData::analysisRequest() {
     if (fileName_ == "favicon.ico") {
       header += "Content-Type: image/png\r\n";
       header += "Content-Length: " + to_string(sizeof favicon) + "\r\n";
-      header += "Server: LinYa's Web Server\r\n";
+      header += "Server: LinYa2's Web Server\r\n";
 
       header += "\r\n";
       outBuffer_ += header;
@@ -542,7 +547,7 @@ AnalysisState HttpData::analysisRequest() {
       ;
       return ANALYSIS_SUCCESS;
     }
-
+    std::cout<<1<<std::endl;
     struct stat sbuf;
     if (stat(fileName_.c_str(), &sbuf) < 0) {
       header.clear();
@@ -551,7 +556,7 @@ AnalysisState HttpData::analysisRequest() {
     }
     header += "Content-Type: " + filetype + "\r\n";
     header += "Content-Length: " + to_string(sbuf.st_size) + "\r\n";
-    header += "Server: LinYa's Web Server\r\n";
+    header += "Server: LinYa1's Web Server\r\n";
     // 头部结束
     header += "\r\n";
     outBuffer_ += header;
@@ -561,6 +566,7 @@ AnalysisState HttpData::analysisRequest() {
     int src_fd = open(fileName_.c_str(), O_RDONLY, 0);
     if (src_fd < 0) {
       outBuffer_.clear();
+      std::cout<<1234<<std::endl;
       handleError(fd_, 404, "Not Found!");
       return ANALYSIS_ERROR;
     }
@@ -569,6 +575,7 @@ AnalysisState HttpData::analysisRequest() {
     if (mmapRet == (void *)-1) {
       munmap(mmapRet, sbuf.st_size);
       outBuffer_.clear();
+      std::cout<<12<<std::endl;
       handleError(fd_, 404, "Not Found!");
       return ANALYSIS_ERROR;
     }
@@ -581,28 +588,57 @@ AnalysisState HttpData::analysisRequest() {
   return ANALYSIS_ERROR;
 }
 
-void HttpData::handleError(int fd, int err_num, string short_msg) {
+
+string readFileIntoString(char * filename)
+{
+ifstream ifile(filename);
+//将文件读入到ostringstream对象buf中
+ostringstream buf;
+char ch;
+while(buf&&ifile.get(ch))
+buf.put(ch);
+//返回与流对象buf关联的字符串
+return buf.str();
+}
+
+void HttpData::handleError(int fd, int err_num, string short_msg) {//发送错误
   short_msg = " " + short_msg;
   char send_buff[4096];
-  string body_buff, header_buff;
-  body_buff += "<html><title>哎~出错了</title>";
-  body_buff += "<body bgcolor=\"ffffff\">";
-  body_buff += to_string(err_num) + short_msg;
-  body_buff += "<hr><em> LinYa's Web Server</em>\n</body></html>";
+  // string body_buff, header_buff;
+  // body_buff += "<html> <meta charset=\"UTF-8\"> <title>哎~出错了</title>";
+  // body_buff += "<body bgcolor=\"ffffff\">";
+  // body_buff += to_string(err_num) + short_msg;
+  // body_buff += "<hr><em> autoli's Web Server</em>\n</body></html>";
 
-  header_buff += "HTTP/1.1 " + to_string(err_num) + short_msg + "\r\n";
+  // header_buff += "HTTP/1.1 " + to_string(err_num) + short_msg + "\r\n";
+  // header_buff += "Content-Type: text/html\r\n";
+  // header_buff += "Connection: Close\r\n";
+  // header_buff += "Content-Length: " + to_string(body_buff.size()) + "\r\n";
+  // header_buff += "Server: autoli's Web Server\r\n";
+  // ;
+  // header_buff += "\r\n";
+  // // 错误处理不考虑writen不完的情况
+  // sprintf(send_buff, "%s", header_buff.c_str());
+  // writen(fd, send_buff, strlen(send_buff));
+  // sprintf(send_buff, "%s", body_buff.c_str());
+  // writen(fd, send_buff, strlen(send_buff));
+  string header_buff;
+  char * fn=(char*)"html/welcome.html";//这里如果用VS可能要来个强制转换(char*)"a.txt"
+  
+  header_buff += "HTTP/1.1 " + to_string(200) + "OK"+"\r\n";
   header_buff += "Content-Type: text/html\r\n";
   header_buff += "Connection: Close\r\n";
-  header_buff += "Content-Length: " + to_string(body_buff.size()) + "\r\n";
-  header_buff += "Server: LinYa's Web Server\r\n";
-  ;
+  header_buff += "Content-Length: " + to_string(readFileIntoString(fn).size()) + "\r\n";
+  header_buff += "Server: autoli's Web Server\r\n";
   header_buff += "\r\n";
-  // 错误处理不考虑writen不完的情况
   sprintf(send_buff, "%s", header_buff.c_str());
   writen(fd, send_buff, strlen(send_buff));
-  sprintf(send_buff, "%s", body_buff.c_str());
+  sprintf(send_buff, "%s",readFileIntoString(fn).c_str());
   writen(fd, send_buff, strlen(send_buff));
+   
 }
+
+
 
 void HttpData::handleClose() {
   connectionState_ = H_DISCONNECTED;

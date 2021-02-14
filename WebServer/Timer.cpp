@@ -6,10 +6,16 @@
 #include <queue>
 
 TimerNode::TimerNode(std::shared_ptr<HttpData> requestData, int timeout)
-    : deleted_(false), SPHttpData(requestData) {
+    : deleted_(false), SPHttpData(requestData) {//创建新节点
   struct timeval now;
   gettimeofday(&now, NULL);
-  // 以毫秒计
+//   struct timeval {
+//         long    tv_sec;         /* seconds */
+//         long    tv_usec;        /* and microseconds */
+// };
+// int gettimeofday(struct  timeval*tv,struct  timezone *tz )
+// gettimeofday()会把目前的时间用tv 结构体返回，当地时区的信息则放到tz所指的结构中
+  // 以毫秒计，计算好过期时间
   expiredTime_ =
       (((now.tv_sec % 10000) * 1000) + (now.tv_usec / 1000)) + timeout;
 }
@@ -18,17 +24,17 @@ TimerNode::~TimerNode() {
   if (SPHttpData) SPHttpData->handleClose();
 }
 
-TimerNode::TimerNode(TimerNode &tn)
+TimerNode::TimerNode(TimerNode &tn)//复制构造
     : SPHttpData(tn.SPHttpData), expiredTime_(0) {}
 
-void TimerNode::update(int timeout) {
+void TimerNode::update(int timeout) {//更新时间
   struct timeval now;
   gettimeofday(&now, NULL);
   expiredTime_ =
       (((now.tv_sec % 10000) * 1000) + (now.tv_usec / 1000)) + timeout;
 }
 
-bool TimerNode::isValid() {
+bool TimerNode::isValid() {//如果当前时间小于过期时间就有效，否则就将自己标记为删除
   struct timeval now;
   gettimeofday(&now, NULL);
   size_t temp = (((now.tv_sec % 10000) * 1000) + (now.tv_usec / 1000));
@@ -41,14 +47,14 @@ bool TimerNode::isValid() {
 }
 
 void TimerNode::clearReq() {
-  SPHttpData.reset();
+  SPHttpData.reset();//  shared_ptr的reset( )函数的作用是将引用计数减1，停止对指针的共享，除非引用计数为0，否则不会发生删除操作。
   this->setDeleted();
 }
 
 TimerManager::TimerManager() {}
 
 TimerManager::~TimerManager() {}
-
+//时间管理类的队列添加新节点
 void TimerManager::addTimer(std::shared_ptr<HttpData> SPHttpData, int timeout) {
   SPTimerNode new_node(new TimerNode(SPHttpData, timeout));
   timerNodeQueue.push(new_node);

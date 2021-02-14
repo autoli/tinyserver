@@ -68,7 +68,9 @@ class MimeType {
  private:
   static pthread_once_t once_control;
 };
-
+//若一个类 T 继承 std::enable_shared_from_this<T> ，则会为该类 T 提供成员函数： shared_from_this 。 
+//当 T 类型对象 t 被一个为名为 pt 的 std::shared_ptr<T> 类对象管理时，调用 T::shared_from_this 成员函数，将会返回一个新的 std::shared_ptr<T> 对象，它与 pt 共享 t 的所有权。
+//当类A被share_ptr管理，且在类A的成员函数里需要把当前类对象作为参数传给其他函数时，就需要传递一个指向自身的share_ptr。
 class HttpData : public std::enable_shared_from_this<HttpData> {
  public:
   HttpData(EventLoop *loop, int connfd);
