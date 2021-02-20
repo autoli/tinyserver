@@ -1,0 +1,197 @@
+];   
+  
+           
+    
+        window.onload = function(){
+        document.getElementById("usename").textContent= sessionStorage.getItem("dataname");  
+        document.getElementById("usename").textContent+="   您好！";
+        var tbody = document.getElementById('tbMain');  
+            
+        for(var i = 0;i < per.length; i++){ //遍历一下json数据  
+            var trow = getDataRow(per[i]); //定义一个方法,返回tr数据 
+            tbody.appendChild(trow);  
+            }   
+        }  
+        
+  function getDataRow(h){  
+     var row = document.createElement('tr'); //创建行  
+       
+     var idCell = document.createElement('td'); //创建第一列id
+     idCell.setAttribute('contentEditable','true');  
+     idCell.innerHTML = h.web_name; //填充数据  
+     row.appendChild(idCell); //加入行  ，下面类似  
+       
+     var nameCell = document.createElement('td');//创建第二列name  
+     nameCell.setAttribute('contentEditable','true');
+     nameCell.innerHTML = h.log_name;  
+     row.appendChild(nameCell);  
+       
+     var passCell = document.createElement('td');//创建第三列job  
+     passCell.setAttribute('contentEditable','true');
+     var pass= document.createElement('input'); //创建一个input控件  
+     pass.setAttribute('type','password'); 
+     pass.setAttribute('value',h.log_pass);     
+     passCell.appendChild(pass);
+     row.appendChild(passCell);  
+       
+     var webdescribeCell = document.createElement('td');//创建第三列job 
+     webdescribeCell.setAttribute('contentEditable','true'); 
+     webdescribeCell.innerHTML = h.log_des;  
+     row.appendChild(webdescribeCell);  
+     //到这里，json中的数据已经添加到表格中，下面为每行末尾添加删除按钮  
+       
+     var delCell = document.createElement('td');//创建第四列，操作列  
+     row.appendChild(delCell); 
+
+     var eye = document.createElement('i'); //创建一个input控件 
+     eye.setAttribute('class','fa fa-eye-slash'); //type="button"   
+     eye.setAttribute("onclick",'showhide(this)');//firefox 
+     eye.setAttribute('id','eye'); 
+     
+     delCell.appendChild(eye);  //把删除按钮加入td，别忘了 
+     var btnDel = document.createElement('input'); //创建一个input控件  
+     btnDel.setAttribute('type','button'); //type="button"  
+     btnDel.setAttribute('value','删除');   
+     btnDel.setAttribute("onclick",'deletetext(this)');//firefox 
+     delCell.appendChild(btnDel);  //把删除按钮加入td，别忘了  
+     btnDel.setAttribute('id',h.web_id);
+     
+     var btnUpt = document.createElement('input'); //创建一个input控件  
+     btnUpt.setAttribute('type','button'); //type="button"  
+     btnUpt.setAttribute('value','更新'); 
+     btnUpt.setAttribute("onclick",'updatetext(this)');//firefox 
+     btnUpt.setAttribute('id',h.web_id);  
+
+     delCell.appendChild(btnUpt);  //把删除按钮加入td，别忘了
+     
+
+     return row; //返回tr数据      
+     }  
+
+     function showhide(obj){
+        var tr1 = obj.parentNode.parentNode;
+        if (tr1.cells[2].firstChild.type == "password") {
+            tr1.cells[2].firstChild.type = "text";
+            eye.className='fa fa-eye-slash'
+        }else {
+            tr1.cells[2].firstChild.type = "password";
+            eye.className='fa fa-eye'
+        }
+    }
+
+     function deletetext(obj)
+     {
+         if(confirm("确定删除这一行嘛？")){  
+             //找到按钮所在行的节点，然后删掉这一行  
+             //obj.parentNode.parentNode.parentNode.removeChild(obj.parentNode.parentNode); 
+            var tr1 = obj.parentNode.parentNode;
+            var myForm=document.createElement('form');
+            myForm.method='POST';
+            myForm.action='DeleteText';
+            myForm.enctype="text/plain";
+            myForm.acceptCharset="UTF-8";
+            
+            var myInput = document.createElement("input"); 
+            myInput.setAttribute("type","hidden");
+            myInput.setAttribute("name", "user");  
+            myInput.setAttribute("value", sessionStorage.getItem("dataname")); 
+            
+            var myInput2 = document.createElement("input"); 
+            myInput2.setAttribute("type","hidden");
+            myInput2.setAttribute("name", "password");  
+            myInput2.setAttribute("value", sessionStorage.getItem("datapass")); 
+
+            var myInput3 = document.createElement("input"); 
+            myInput3.setAttribute("type","hidden");
+            myInput3.setAttribute("name", "web_id");  
+            myInput3.setAttribute("value", obj.id); 
+
+            myForm.appendChild(myInput);
+            myForm.appendChild(myInput2); 
+            myForm.appendChild(myInput3);
+
+            document.body.appendChild(myForm);
+            myForm.submit();  
+            } 
+     }
+
+     function updatetext(obj)
+     {
+         if(confirm("确定更新这一行嘛？")){  
+            //alert(obj.id);
+             //找到按钮所在行的节点，然后删掉这一行  
+             //obj.parentNode.parentNode.parentNode.removeChild(obj.parentNode.parentNode); 
+             var tr1 = obj.parentNode.parentNode;
+			//alert(tr1.rowIndex);
+            //alert(tr1.cells[0].childNodes[0].value); //获取的方法一
+            //alert(tr1.cells[1].innerText);
+            var tbody = document.getElementById('tbMain');
+            //alert(tbody.rows.length);
+            //alert(tbody.rows[0].cells.length);
+            var title=document.getElementById("tabletile");
+            //alert(title.rows[0].cells[0].innerText);
+            var colomns=tbody.rows[0].cells.length-1;
+
+            var myForm=document.createElement('form');
+            myForm.method='POST';
+            myForm.action='UpdateText';
+            myForm.enctype="text/plain";
+            myForm.acceptCharset="UTF-8";
+            
+            var myInput = document.createElement("input"); 
+            myInput.setAttribute("type","hidden");
+            myInput.setAttribute("name", "user");  
+            myInput.setAttribute("value", sessionStorage.getItem("dataname")); 
+            
+            var myInput2 = document.createElement("input"); 
+            myInput2.setAttribute("type","hidden");
+            myInput2.setAttribute("name", "password");  
+            myInput2.setAttribute("value", sessionStorage.getItem("datapass")); 
+
+            var myInput3 = document.createElement("input"); 
+            myInput3.setAttribute("type","hidden");
+            myInput3.setAttribute("name", "web_id");  
+            myInput3.setAttribute("value", obj.id); 
+
+            myForm.appendChild(myInput);
+            myForm.appendChild(myInput2); 
+            myForm.appendChild(myInput3);
+
+
+            for(var i=0;i<colomns;++i)
+            {
+                var myInput = document.createElement("input"); 
+                myInput.setAttribute("type","hidden");
+                myInput.setAttribute("name", title.rows[0].cells[i].innerText); 
+                if(i!=2) 
+                myInput.setAttribute("value", tr1.cells[i].innerText);
+                else
+                myInput.setAttribute("value", tr1.cells[i].firstChild.value);
+                myForm.appendChild(myInput);
+            }
+            document.body.appendChild(myForm);
+            myForm.submit();  
+        } 
+     }
+        </script>
+</head>
+ 
+<body>
+    <form action="login" method="post">
+    <div ><font size="10" id="usename"> <strong>用户</strong></font></div>
+    <table border="1" align="center" >
+        <thead id="tabletile"> 
+        <tr>
+        <th>网址</th>
+        <th>用户名</th>
+        <th>密码</th>
+        <th>说明</th>
+        <th align="right"><button id="addData" formaction="addData"  type="submit">添加</button><button id="exitall" formaction="exitall" type="submit">退出</button></th>
+        </tr>
+        </thead> 
+    <tbody id="tbMain" align="center" ></tbody> 
+    </table>
+    </form>
+    
+</body>
+</html>

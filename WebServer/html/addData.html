@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Add data</title>
+        <script type="text/javascript">
+            window.onload = function()
+            {                        
+               var addData = document.getElementById("addData");
+               var webtext = document.getElementById("webtext");
+               var webname = document.getElementById("webname");
+               var webpass = document.getElementById("webpass");
+               var webdes = document.getElementById("webdes");
+               var myForm = document.form1;
+               
+               addData.onclick = function()//存入数据
+               {
+                    var myInput = document.createElement("input"); 
+                    myInput.setAttribute("type","hidden");
+                    myInput.setAttribute("name", "user");  
+                    myInput.setAttribute("value", sessionStorage.getItem("dataname")); 
+                    
+                    var myInput2 = document.createElement("input"); 
+                    myInput2.setAttribute("type","hidden");
+                    myInput2.setAttribute("name", "password");  
+                    myInput2.setAttribute("value", sessionStorage.getItem("datapass")); 
+
+                    myForm.appendChild(myInput);
+                    myForm.appendChild(myInput2);   
+                    myForm.submit();            
+               }; 
+            }
+        </script>
+    </head>
+    <body>
+<br/>
+<br/>
+    <div align="center"><font size="5"> <strong>注册</strong></font></div>
+    <br/>
+        <div class="login">
+                <form name="form1" id="form" action="addDatapage" method="post" enctype="text/plain" accept-charset="UTF-8">                  
+                        <div align="center"><input type="webtext" name="webtext" placeholder="网址" required="required"></div><br/>
+                        <div align="center"><input type="webname" name="webname" placeholder="用户名" required="required"></div><br/>
+                        <div align="center"><input onkeyup="this.value=this.value.replace(/[^\w_]/g,'');" type="webpass" name="webpass" placeholder="密码" required="required"></div><br/>
+                        <div align="center"><input type="webdes" name="webdes" placeholder="说明" required="required"></div><br/>
+
+                        <div align="center"><button id="addData" >添加</button></div>
+                </form>
+        </div>
+    </body>
+</html>

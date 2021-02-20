@@ -395,6 +395,33 @@ Util.cpp.s:
 	cd /media/llaron/7E96ADB696AD6F79/代码/webserver/WebServer && $(MAKE) -f WebServer/CMakeFiles/WebServer.dir/build.make WebServer/CMakeFiles/WebServer.dir/Util.cpp.s
 .PHONY : Util.cpp.s
 
+sql_connection_pool.o: sql_connection_pool.cc.o
+
+.PHONY : sql_connection_pool.o
+
+# target to build an object file
+sql_connection_pool.cc.o:
+	cd /media/llaron/7E96ADB696AD6F79/代码/webserver/WebServer && $(MAKE) -f WebServer/CMakeFiles/WebServer.dir/build.make WebServer/CMakeFiles/WebServer.dir/sql_connection_pool.cc.o
+.PHONY : sql_connection_pool.cc.o
+
+sql_connection_pool.i: sql_connection_pool.cc.i
+
+.PHONY : sql_connection_pool.i
+
+# target to preprocess a source file
+sql_connection_pool.cc.i:
+	cd /media/llaron/7E96ADB696AD6F79/代码/webserver/WebServer && $(MAKE) -f WebServer/CMakeFiles/WebServer.dir/build.make WebServer/CMakeFiles/WebServer.dir/sql_connection_pool.cc.i
+.PHONY : sql_connection_pool.cc.i
+
+sql_connection_pool.s: sql_connection_pool.cc.s
+
+.PHONY : sql_connection_pool.s
+
+# target to generate assembly for a file
+sql_connection_pool.cc.s:
+	cd /media/llaron/7E96ADB696AD6F79/代码/webserver/WebServer && $(MAKE) -f WebServer/CMakeFiles/WebServer.dir/build.make WebServer/CMakeFiles/WebServer.dir/sql_connection_pool.cc.s
+.PHONY : sql_connection_pool.cc.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -434,6 +461,9 @@ help:
 	@echo "... Util.o"
 	@echo "... Util.i"
 	@echo "... Util.s"
+	@echo "... sql_connection_pool.o"
+	@echo "... sql_connection_pool.i"
+	@echo "... sql_connection_pool.s"
 .PHONY : help
 
 

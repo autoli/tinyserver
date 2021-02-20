@@ -1,27 +1,68 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML>
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>WebServer</title>
-    </head>
-    <body>
-    <br/>
-    <br/>
-    <div align="center"><font size="5"> <strong>是时候做出选择了</strong></font></div>
-	<br/>
-		<br/>
-		<form action="5" method="post">
- 			<div align="center"><button type="submit">xxx.jpg</button></div>
+        <title>HTML5--Web存储SessionStorage</title>
+        <script type="text/javascript">
+            window.onload = function()
+            {               
+                document.getElementById("usename").textContent= sessionStorage.getItem("dataname");
+                var addData = document.getElementById("addData");
+               
+                // addData.onclick = function()//存入数据
+                // {
+                    
+                // };                
+            }
+        </script>
+</head>
+ 
+<body>
+    <form action="login" method="post">
+        <div ><font size="15" id="usename"> <strong>用户</strong></font></div>
+        <table border="1" align="center">
+            <tr>
+            <th>网址</th>
+            <th>用户名</th>
+            <th>密码</th>
+            <th>说明</th>
+            <th><button id="addData" formaction="addData" type="submit">添加</button></th>
+            </tr>
+    
+                <tr>
+                <form name="form1" id="form" action="addDatapage" method="post" enctype="text/plain" accept-charset="UTF-8"> 
+                    <td><div align="center"><input type="webtext" name="webtext" value="网址" required="required"></td>
+                    <td><div align="center"><input type="webname" name="webname" value="用户名" required="required"></td>
+                    <td><div align="center"><input onkeyup="this.value=this.value.replace(/[^\w_]/g,'');" type="webpass" name="webpass" value="密码" required="required"></td>
+                    <td><div align="center"><input type="webdes" name="webdes" placeholder="说明" required="required"></div><br/></td>             
+                <td ><button name="delate" type="submit" value="delate" formaction="delete">删除</button> <button name="update" type="submit" value="update" formaction="update">修改</button> </td>    
+                    
+                    
+                    
                 </form>
-		<br/>
-                <form action="6" method="post">
-                        <div align="center"><button type="submit" >xxx.avi</button></div>
-                </form>
-		<br/>
-		<form action="7" method="post">
- 			<div align="center"><button type="submit">关注我</button></div>
-                </form>
-		
-        </div>
-    </body>
-</html>
+                
+                
+                </tr>
+            </table>
+      
+
+        <table border="1" align="center">
+            <tr>
+            <th>网址</th>
+            <th>用户名</th>
+            <th>密码</th>
+            <th>说明</th>
+            <th><button id="addData" formaction="addData" type="submit">添加</button></th>
+            </tr>
+    
+            <!-- <tr>
+            <td>row 2, cell 1,row3,cell3</td>
+            <td>row 2, cell 2,row2,cell3</td>
+            <td>row 1, cell 1，row2,cell3</td>
+            <td>row 1, cell 2 ,row2,cell2</td>
+            <td ><button name="delate" value="delate" formaction="delete">删除</button> <button name="update" value="update" formaction="update">修改</button> </td>
+            </tr>
+        </table>
+    </form>    
+</body>
+</html> -->

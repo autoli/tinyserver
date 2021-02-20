@@ -9,6 +9,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/WebServer.dir/Server.cpp.o"
   "CMakeFiles/WebServer.dir/Timer.cpp.o"
   "CMakeFiles/WebServer.dir/Util.cpp.o"
+  "CMakeFiles/WebServer.dir/sql_connection_pool.cc.o"
   "WebServer"
   "WebServer.pdb"
 )

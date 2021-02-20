@@ -9,7 +9,7 @@
 #include <string>
 #include <unordered_map>
 #include "Timer.h"
-
+#include "sql_connection_pool.h"
 
 class EventLoop;
 class TimerNode;
@@ -88,6 +88,7 @@ class HttpData : public std::enable_shared_from_this<HttpData> {
 
  private:
   EventLoop *loop_;
+  connection_pool* m_connPool;
   std::shared_ptr<Channel> channel_;
   int fd_;
   std::string inBuffer_;
@@ -102,6 +103,7 @@ class HttpData : public std::enable_shared_from_this<HttpData> {
   int nowReadPos_;
   ProcessState state_;
   ParseState hState_;
+  URIState findState_;
   bool keepAlive_;
   std::map<std::string, std::string> headers_;
   std::weak_ptr<TimerNode> timer_;
@@ -113,4 +115,8 @@ class HttpData : public std::enable_shared_from_this<HttpData> {
   URIState parseURI();
   HeaderState parseHeaders();
   AnalysisState analysisRequest();
+  MYSQL_RES mysql_queryresult(connection_pool *connPool,string querystr);
+  void mysql_insertresult(connection_pool *connPool,string querystr);
+  void getallmessage(int fd,string short_msg,string short_msg2,string userid);
+  string findkey(string startkey,int pos,string endkey);
 };
