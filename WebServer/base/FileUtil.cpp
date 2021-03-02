@@ -1,5 +1,4 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
+
 #include "FileUtil.h"
 #include <assert.h>
 #include <errno.h>
@@ -13,6 +12,7 @@ using namespace std;
 AppendFile::AppendFile(string filename) : fp_(fopen(filename.c_str(), "ae")) {
   // 用户提供缓冲区
   setbuffer(fp_, buffer_, sizeof buffer_);
+  //在打开文件流后, 读取内容之前, 调用setbuffer()可用来设置文件流的缓冲区. 参数stream 为指定的文件流, 参数buf 指向自定的缓冲区起始地址, 参数size 为缓冲区大小.
 }
 
 AppendFile::~AppendFile() { fclose(fp_); }

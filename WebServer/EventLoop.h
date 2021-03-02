@@ -1,5 +1,4 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
+
 #pragma once
 #include <functional>
 #include <memory>
@@ -26,7 +25,7 @@ class EventLoop {
   void queueInLoop(Functor&& cb);
   bool isInLoopThread() const { return threadId_ == CurrentThread::tid(); }
   void assertInLoopThread() { assert(isInLoopThread()); }
-  void shutdown(shared_ptr<Channel> channel) { shutDownWR(channel->getFd()); }
+  void shutdown(shared_ptr<Channel> channel) { shutDownWR(channel->getFd()); }//关闭channel
   void removeFromPoller(shared_ptr<Channel> channel) {
     // shutDownWR(channel->getFd());
     poller_->epoll_del(channel);

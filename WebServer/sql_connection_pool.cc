@@ -40,15 +40,18 @@ void connection_pool::init(string url, string User, string PassWord, string DBNa
 		
 		if (con == NULL)
 		{
+			cout<<i<<endl;
+			cout<<"MYSQL ERRor"<<endl;
 			LOG<<("MySQL Error");
 			exit(1);
 		}
 		
-		con = mysql_real_connect(con, url.c_str(), User.c_str(), PassWord.c_str(), DBName.c_str(), Port, NULL, 0);
+		con = mysql_real_connect(con, url.c_str(), User.c_str(), PassWord.c_str(), DBName.c_str(), Port+i, NULL, 0);
 		
 		if (con == NULL)
 		{
-			
+			cout<<i<<endl;
+			cout<<"MYSQL ERRor2";
 			LOG<<("MySQL Error");
 			exit(1);
 		}

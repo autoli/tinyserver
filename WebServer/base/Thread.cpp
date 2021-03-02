@@ -1,5 +1,4 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
+
 #include "Thread.h"
 #include <assert.h>
 #include <errno.h>
@@ -60,7 +59,7 @@ struct ThreadData {
     latch_ = NULL;
 
     CurrentThread::t_threadName = name_.empty() ? "Thread" : name_.c_str();
-    prctl(PR_SET_NAME, CurrentThread::t_threadName); //返回调用进程的进程名字给参数t_threadName; 
+    prctl(PR_SET_NAME, CurrentThread::t_threadName); //指定PR_SET_NAME，即设置进程名t_threadName; 
    
     func_();
     CurrentThread::t_threadName = "finished";

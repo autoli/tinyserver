@@ -15,11 +15,11 @@ class HttpData;
 class Channel {
  private:
   typedef std::function<void()> CallBack;
-  EventLoop *loop_;
+  EventLoop *loop_;//应该是说明属于loop
   int fd_;
-  __uint32_t events_;
-  __uint32_t revents_;
-  __uint32_t lastEvents_;
+  __uint32_t events_; //为设置事件，用去加入epoll设置
+  __uint32_t revents_;//读取到当前事件，然后处理，为返回事件
+  __uint32_t lastEvents_;//弄清三种事件
 
   // 方便找到上层持有该Channel的对象
   std::weak_ptr<HttpData> holder_;
@@ -58,7 +58,7 @@ class Channel {
 
   void handleEvents() {
     events_ = 0;
-    if ((revents_ & EPOLLHUP) && !(revents_ & EPOLLIN)) {
+    if ((revents_ & EPOLLHUP) && !(revents_ & EPOLLIN)) {//EPOLLHUP表示读关闭，EPOLLIN
       events_ = 0;
       return;
     }
@@ -73,7 +73,7 @@ class Channel {
     if (revents_ & EPOLLOUT) {
       handleWrite();
     }
-    handleConn();
+    handleConn();//每次会处理handleconn
   }
   void handleRead();
   void handleWrite();

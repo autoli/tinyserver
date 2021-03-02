@@ -135,8 +135,6 @@ errno.h
 -
 pthread.h
 -
-pthread.h
--
 time.h
 -
 cstdint

@@ -1,6 +1,7 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
-#pragma once
+
+#pragma once //为了避免同一个头文件被包含（include）多次，C/C++中有两种宏实现方式：一种是#ifndef方式；另一种是#pragma once方式。
+            //在能够支持这两种方式的编译器上，二者并没有太大的区别。但两者仍然有一些细微的区别。
+
 #include <sys/epoll.h>
 #include <unistd.h>
 #include <functional>
@@ -16,7 +17,7 @@ class TimerNode;
 class Channel;
 
 enum ProcessState {
-  STATE_PARSE_URI = 1,
+  STATE_PARSE_URI = 1,//统一资源标志符
   STATE_PARSE_HEADERS,
   STATE_RECV_BODY,
   STATE_ANALYSIS,
@@ -55,7 +56,8 @@ enum HttpMethod { METHOD_POST = 1, METHOD_GET, METHOD_HEAD };
 
 enum HttpVersion { HTTP_10 = 1, HTTP_11 };
 
-class MimeType {
+class MimeType {//是设定某种扩展名的文件用一种应用程序来打开的方式类型，当该扩展名文件被访问的时候，浏览器会自动使用指定应用程序来打开。多用于指定一些客户端自定义的文件名，以及一些媒体文件打开方式。
+ //MIME Type，也就是该资源的媒体类型。一般由Content-Type指定
  private:
   static void init();
   static std::unordered_map<std::string, std::string> mime;
@@ -73,7 +75,7 @@ class MimeType {
 //当类A被share_ptr管理，且在类A的成员函数里需要把当前类对象作为参数传给其他函数时，就需要传递一个指向自身的share_ptr。
 class HttpData : public std::enable_shared_from_this<HttpData> {
  public:
-  HttpData(EventLoop *loop, int connfd);
+  HttpData(EventLoop *loop, int connfd,connection_pool* sqlpool);
   ~HttpData() { close(fd_); }
   void reset();
   void seperateTimer();
@@ -88,7 +90,8 @@ class HttpData : public std::enable_shared_from_this<HttpData> {
 
  private:
   EventLoop *loop_;
-  connection_pool* m_connPool;
+  MYSQL *mysql;
+  connection_pool* m_connPool;//sql连接池
   std::shared_ptr<Channel> channel_;
   int fd_;
   std::string inBuffer_;

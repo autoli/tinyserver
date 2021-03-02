@@ -24,7 +24,7 @@ EventLoop *EventLoopThreadPool::getNextLoop() {
   baseLoop_->assertInLoopThread();
   assert(started_);
   EventLoop *loop = baseLoop_;
-  if (!loops_.empty()) {
+  if (!loops_.empty()) {//这里为什么直接获取下一个loop进行赋值，因为一个loop可以监听多个chanel，这里是平均分配
     loop = loops_[next_];
     next_ = (next_ + 1) % numThreads_;
   }

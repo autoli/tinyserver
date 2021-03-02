@@ -24,7 +24,7 @@ class Epoll {
   void handleExpired();
 
  private:
-  static const int MAXFDS = 100000;
+  static const int MAXFDS = 100000;//每个epoll处理的最大事件数
   int epollFd_;
   std::vector<epoll_event> events_;
   std::shared_ptr<Channel> fd2chan_[MAXFDS];

@@ -1,5 +1,3 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
 #include "Util.h"
 
 #include <errno.h>
@@ -148,12 +146,12 @@ ssize_t writen(int fd, std::string &sbuff) {
 void handle_for_sigpipe() {
   struct sigaction sa;
   memset(&sa, '\0', sizeof(sa));
-  sa.sa_handler = SIG_IGN;
+  sa.sa_handler = SIG_IGN;//将指定信号忽略
   sa.sa_flags = 0;
-  if (sigaction(SIGPIPE, &sa, NULL)) return;
+  if (sigaction(SIGPIPE, &sa, NULL)) return;//这里是为了屏蔽SIGPIPE信号，防止意外退出
 }
 
-int setSocketNonBlocking(int fd) {
+int setSocketNonBlocking(int fd) {//对fd的操作
   int flag = fcntl(fd, F_GETFL, 0);
   if (flag == -1) return -1;
 
@@ -164,7 +162,7 @@ int setSocketNonBlocking(int fd) {
 
 void setSocketNodelay(int fd) {
   int enable = 1;
-  setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void *)&enable, sizeof(enable));
+  setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void *)&enable, sizeof(enable));//开启Nagle算法
 }
 
 void setSocketNoLinger(int fd) {

@@ -1,5 +1,4 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
+
 #pragma once
 #include <assert.h>
 #include <string.h>
@@ -102,5 +101,5 @@ class LogStream : noncopyable {
 
   Buffer buffer_;
 
-  static const int kMaxNumericSize = 32;
+  static const int kMaxNumericSize = 32;//为了浮点数的有效位数
 };

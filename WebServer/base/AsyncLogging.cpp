@@ -1,5 +1,4 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
+
 #include "AsyncLogging.h"
 #include <assert.h>
 #include <stdio.h>
@@ -24,7 +23,7 @@ AsyncLogging::AsyncLogging(std::string logFileName_, int flushInterval)
   buffers_.reserve(16);
 }
 
-void AsyncLogging::append(const char* logline, int len) {
+void AsyncLogging::append(const char* logline, int len) {//这里是将logfile里面放入到buffer中，如果buffer空间不够，加入到buffer向量中
   MutexLockGuard lock(mutex_);
   if (currentBuffer_->avail() > len)
     currentBuffer_->append(logline, len);
@@ -40,7 +39,7 @@ void AsyncLogging::append(const char* logline, int len) {
   }
 }
 
-void AsyncLogging::threadFunc() {
+void AsyncLogging::threadFunc() {//这个函数还比较重要
   assert(running_ == true);
   latch_.countDown();
   LogFile output(basename_);
@@ -59,7 +58,7 @@ void AsyncLogging::threadFunc() {
       MutexLockGuard lock(mutex_);
       if (buffers_.empty())  // unusual usage!
       {
-        cond_.waitForSeconds(flushInterval_);
+        cond_.waitForSeconds(flushInterval_);//如果buffer向量为空，就等待
       }
       buffers_.push_back(currentBuffer_);
       currentBuffer_.reset();
@@ -73,7 +72,7 @@ void AsyncLogging::threadFunc() {
 
     assert(!buffersToWrite.empty());
 
-    if (buffersToWrite.size() > 25) {
+    if (buffersToWrite.size() > 25) {//为什么这里要丢弃
       // char buf[256];
       // snprintf(buf, sizeof buf, "Dropped log messages at %s, %zd larger
       // buffers\n",

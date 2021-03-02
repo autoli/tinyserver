@@ -1,5 +1,4 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
+
 #include "HttpData.h"
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -109,8 +108,8 @@ void MimeType::init() {
 MYSQL_RES HttpData::mysql_queryresult(connection_pool *connPool,string querystr)
 {
     //先从连接池中取一个连接
-    MYSQL *mysql = NULL;
-    connectionRAII mysqlcon(&mysql, connPool);  
+    // MYSQL *mysql = NULL;
+    // connectionRAII mysqlcon(&mysql, connPool);  
     //在user表中检索username，passwd数据，浏览器端输入
     if (mysql_query(mysql, querystr.c_str()))
     {
@@ -122,8 +121,8 @@ MYSQL_RES HttpData::mysql_queryresult(connection_pool *connPool,string querystr)
 void HttpData::mysql_insertresult(connection_pool *connPool,string querystr)
 {
     //先从连接池中取一个连接
-    MYSQL *mysql = NULL;
-    connectionRAII mysqlcon(&mysql, connPool);  
+    // MYSQL *mysql = NULL;
+    // connectionRAII mysqlcon(&mysql, connPool);  
     //在user表中检索username，passwd数据，浏览器端输入
     if (mysql_query(mysql, querystr.c_str()))
     {
@@ -220,7 +219,7 @@ std::string MimeType::getMime(const std::string &suffix) {
     return mime[suffix];
 }
 
-HttpData::HttpData(EventLoop *loop, int connfd)
+HttpData::HttpData(EventLoop *loop, int connfd,connection_pool* sqlpool)
     : loop_(loop),
       channel_(new Channel(loop, connfd)),
       fd_(connfd),
@@ -234,9 +233,10 @@ HttpData::HttpData(EventLoop *loop, int connfd)
       keepAlive_(false) {//将读写时间与Httpdata事件绑定
   // loop_->queueInLoop(bind(&HttpData::setHandlers, this));
   //数据库初始化
-  m_connPool = connection_pool::GetInstance();
-  m_connPool->init("localhost", "root1", "123456", "web", 3306, 5, 0);//线程池的sql数量和日志是否关闭
-
+  // m_connPool = connection_pool::GetInstance();
+  // m_connPool->init("localhost", "root1", "123456", "web", 3306, 15, 0);//线程池的sql数量和日志是否关闭
+  m_connPool = sqlpool;
+  connectionRAII mysqlcon(&mysql, m_connPool); 
   channel_->setReadHandler(bind(&HttpData::handleRead, this));
   channel_->setWriteHandler(bind(&HttpData::handleWrite, this));
   channel_->setConnHandler(bind(&HttpData::handleConn, this));
@@ -421,13 +421,14 @@ void HttpData::handleConn() {
       int timeout = DEFAULT_KEEP_ALIVE_TIME;
       loop_->updatePoller(channel_, timeout);
     } else {
+      //要测试短连接，需要把下面注释的代码去掉注释
       // cout << "close normally" << endl;
-      // loop_->shutdown(channel_);
-      // loop_->runInLoop(bind(&HttpData::handleClose, shared_from_this()));
-      events_ |= (EPOLLIN | EPOLLET);
-      // events_ |= (EPOLLIN | EPOLLET | EPOLLONESHOT);
-      int timeout = (DEFAULT_KEEP_ALIVE_TIME >> 1);
-      loop_->updatePoller(channel_, timeout);
+      loop_->shutdown(channel_);
+      loop_->runInLoop(bind(&HttpData::handleClose, shared_from_this()));
+      // events_ |= (EPOLLIN | EPOLLET);
+      // // events_ |= (EPOLLIN | EPOLLET | EPOLLONESHOT);
+      // int timeout = (DEFAULT_KEEP_ALIVE_TIME >> 1);
+      // loop_->updatePoller(channel_, timeout);
     }
   } else if (!error_ && connectionState_ == H_DISCONNECTING &&
              (events_ & EPOLLOUT)) {
@@ -973,18 +974,31 @@ AnalysisState HttpData::analysisRequest() {
 
     // echo test
     if (fileName_ == "hello") {
-      outBuffer_ =
-          "HTTP/1.1 200 OK\r\nContent-type: text/plain\r\n\r\nHello World";
+      //  char send_buff[4096];
+      //  string header_buff,body_buff;
+      //  body_buff+="Hello World";
+      //  header_buff += "HTTP/1.1 " + to_string(200) + "OK"+"\r\n";
+      // header_buff += "Content-Type: text/html\r\n";
+      // header_buff += "Connection: Close\r\n";
+      // header_buff += "Content-Length: " + to_string(body_buff.size()) + "\r\n";
+      // header_buff += "Server: autoli's Web Server\r\n";
+      // header_buff += "\r\n";
+      outBuffer_ = "HTTP/1.1 200 OK\r\nContent-type: text/plain\r\n\r\nHello World";
+      // cout<<1<<endl;
+      // sprintf(send_buff, "%s", header_buff.c_str());
+      // writen(fd_, send_buff, strlen(send_buff));
+      // sprintf(send_buff, "%s", body_buff.c_str());
+      // writen(fd_, send_buff, strlen(send_buff));
       return ANALYSIS_SUCCESS;
     }
     if (fileName_ == "favicon.ico") {
-      // header += "Content-Type: image/png\r\n";
-      // header += "Content-Length: " + to_string(sizeof favicon) + "\r\n";
-      // header += "Server: autoli's Web Server\r\n";
+      header += "Content-Type: image/png\r\n";
+      header += "Content-Length: " + to_string(sizeof favicon) + "\r\n";
+      header += "Server: autoli's Web Server\r\n";
 
-      // header += "\r\n";
-      // outBuffer_ += header;
-      // outBuffer_ += string(favicon, favicon + sizeof favicon);
+      header += "\r\n";
+      outBuffer_ += header;
+      outBuffer_ += string(favicon, favicon + sizeof favicon);
       
       return ANALYSIS_SUCCESS;
     }

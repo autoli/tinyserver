@@ -1,5 +1,3 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
 #include "EventLoop.h"
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
@@ -14,7 +12,7 @@ using namespace std;
 __thread EventLoop* t_loopInThisThread = 0;
 
 int createEventfd() {
-  int evtfd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+  int evtfd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);//用于实现进程间通信，EFD_CLOEXEC：表示eventfd在exec其他程序时会自动关闭这个文件描述符
   if (evtfd < 0) {
     LOG << "Failed in eventfd";
     abort();
@@ -29,7 +27,7 @@ EventLoop::EventLoop()
       quit_(false),
       eventHandling_(false),
       callingPendingFunctors_(false),
-      threadId_(CurrentThread::tid()),
+      threadId_(CurrentThread::tid()),//这里的定义在thread.cpp里面，对唯一标识符存储
       pwakeupChannel_(new Channel(this, wakeupFd_)) {
   if (t_loopInThisThread) {
     // LOG << "Another EventLoop " << t_loopInThisThread << " exists in this
@@ -41,7 +39,7 @@ EventLoop::EventLoop()
   pwakeupChannel_->setEvents(EPOLLIN | EPOLLET);
   pwakeupChannel_->setReadHandler(bind(&EventLoop::handleRead, this));
   pwakeupChannel_->setConnHandler(bind(&EventLoop::handleConn, this));
-  poller_->epoll_add(pwakeupChannel_, 0);
+  poller_->epoll_add(pwakeupChannel_, 0);//将唤醒Channel加入poller中，便于写入字符唤醒，实际上是为了处理队列中的函数
 }
 
 void EventLoop::handleConn() {
@@ -75,20 +73,20 @@ void EventLoop::handleRead() {
   pwakeupChannel_->setEvents(EPOLLIN | EPOLLET);
 }
 
-void EventLoop::runInLoop(Functor&& cb) {//右值引用
+void EventLoop::runInLoop(Functor&& cb) {//右值引用，这里要弄清楚queueInloop的用法，如果不是当前线程加入本地等待队列
   if (isInLoopThread())
     cb();
   else
     queueInLoop(std::move(cb));
 }
 
-void EventLoop::queueInLoop(Functor&& cb) {
+void EventLoop::queueInLoop(Functor&& cb) {//在等待事件中加入回调函数
   {
     MutexLockGuard lock(mutex_);
     pendingFunctors_.emplace_back(std::move(cb));
   }
 
-  if (!isInLoopThread() || callingPendingFunctors_) wakeup();
+  if (!isInLoopThread() || callingPendingFunctors_) wakeup();//这里唤醒的用法？
 }
 
 void EventLoop::loop() {
@@ -126,7 +124,7 @@ void EventLoop::doPendingFunctors() {
 
 void EventLoop::quit() {
   quit_ = true;
-  if (!isInLoopThread()) {
+  if (!isInLoopThread()) {//设置终止循环，wakeup唤醒阻塞的poller
     wakeup();
   }
 }

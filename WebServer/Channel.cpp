@@ -1,21 +1,15 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
 #include "Channel.h"
-
 #include <unistd.h>
 #include <cstdlib>
 #include <iostream>
-
 #include <queue>
-
 #include "Epoll.h"
 #include "EventLoop.h"
 #include "Util.h"
-
 using namespace std;
 
 Channel::Channel(EventLoop *loop)
-    : loop_(loop), events_(0), lastEvents_(0), fd_(0) {}
+    : loop_(loop), events_(0), lastEvents_(0), fd_(0) {}//弄清events，lastevents的用处
 
 Channel::Channel(EventLoop *loop, int fd)
     : loop_(loop), fd_(fd), events_(0), lastEvents_(0) {}

@@ -1,5 +1,4 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
+
 #include "Logging.h"
 #include "CurrentThread.h"
 #include "Thread.h"
@@ -24,11 +23,11 @@ void once_init()
 void output(const char* msg, int len)
 {
     pthread_once(&once_control_, once_init);
-    AsyncLogger_->append(msg, len);
+    AsyncLogger_->append(msg, len);//这里用了异步线程完成了写入操作
 }
 
 Logger::Impl::Impl(const char *fileName, int line)
-  : stream_(),
+  : stream_(),//构造一个steam对象方便写入文件中
     line_(line),
     basename_(fileName)
 {
@@ -53,7 +52,7 @@ Logger::Logger(const char *fileName, int line)
 
 Logger::~Logger()
 {
-    impl_.stream_ << " -- " << impl_.basename_ << ':' << impl_.line_ << '\n';
+    impl_.stream_ << " -- " << impl_.basename_ << ':' << impl_.line_ << '\n';//这里才开始放入日志文件中
     const LogStream::Buffer& buf(stream().buffer());
     output(buf.data(), buf.length());
 }
