@@ -46,7 +46,7 @@ void connection_pool::init(string url, string User, string PassWord, string DBNa
 			exit(1);
 		}
 		
-		con = mysql_real_connect(con, url.c_str(), User.c_str(), PassWord.c_str(), DBName.c_str(), Port+i, NULL, 0);
+		con = mysql_real_connect(con, url.c_str(), User.c_str(), PassWord.c_str(), DBName.c_str(), Port, NULL, 0);
 		
 		if (con == NULL)
 		{
@@ -73,7 +73,7 @@ MYSQL *connection_pool::GetConnection()
 
 	if (0 == connList.size())
 		return NULL;
-
+	cout<<m_FreeConn<<endl;
 	reserve.wait();
 	
 	lock.lock();
@@ -93,7 +93,7 @@ bool connection_pool::ReleaseConnection(MYSQL *con)
 {
 	if (NULL == con)
 		return false;
-
+    
 	lock.lock();
 
 	connList.push_back(con);

@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  Logger::setLogFileName(logPath);
+  //Logger::setLogFileName(logPath);//用于启动日志
   
 // STL库在多线程上应用
 #ifndef _PTHREADS

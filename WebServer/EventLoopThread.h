@@ -6,7 +6,7 @@
 #include "base/noncopyable.h"
 
 
-class EventLoopThread : noncopyable {
+class EventLoopThread : noncopyable {//其实就是包含loop的线程
  public:
   EventLoopThread();
   ~EventLoopThread();

@@ -162,7 +162,7 @@ int setSocketNonBlocking(int fd) {//对fd的操作
 
 void setSocketNodelay(int fd) {
   int enable = 1;
-  setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void *)&enable, sizeof(enable));//开启Nagle算法
+  setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void *)&enable, sizeof(enable));//不使用Nagle算法
 }
 
 void setSocketNoLinger(int fd) {

@@ -92,6 +92,7 @@ class HttpData : public std::enable_shared_from_this<HttpData> {
   EventLoop *loop_;
   MYSQL *mysql;
   connection_pool* m_connPool;//sql连接池
+  connectionRAII mysqlcon;//用于连接池的初始化与释放
   std::shared_ptr<Channel> channel_;
   int fd_;
   std::string inBuffer_;

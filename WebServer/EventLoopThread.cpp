@@ -12,7 +12,7 @@ EventLoopThread::~EventLoopThread() {
   exiting_ = true;
   if (loop_ != NULL) {
     loop_->quit();
-    thread_.join();
+    thread_.join();//调用了这个函数的线程对象，一定要等这个线程对象的方法（在构造时传入的方法）执行完毕后返回
   }
 }
 
@@ -20,7 +20,7 @@ EventLoop* EventLoopThread::startLoop() {
   assert(!thread_.started());
   thread_.start();
   {
-    MutexLockGuard lock(mutex_);
+    MutexLockGuard lock(mutex_);//这里的锁是用于条件变量的访问
     // 一直等到threadFun在Thread里真正跑起来
     while (loop_ == NULL) cond_.wait();
   }

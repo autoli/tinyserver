@@ -152,7 +152,7 @@ void sendmessage(int fd, string short_msg)
   
   header_buff += "HTTP/1.1 " + to_string(200) + "OK"+"\r\n";
   header_buff += "Content-Type: text/html\r\n";
-  header_buff += "Connection: Close\r\n";
+  header_buff += "Connection: keep-alive\r\n";
   header_buff += "Content-Length: " + to_string(readFileIntoString(fn).size()) + "\r\n";
   header_buff += "Server: autoli's Web Server\r\n";
   header_buff += "\r\n";
@@ -200,7 +200,7 @@ void HttpData::getallmessage(int fd,string short_msg,string short_msg2,string us
 
     header_buff += "HTTP/1.1 " + to_string(200) + "OK"+"\r\n";
     header_buff += "Content-Type: text/html\r\n";
-    header_buff += "Connection: Close\r\n";
+    header_buff += "Connection: keep-alive\r\n";
     header_buff += "Content-Length: " + to_string(send_buff.size()) + "\r\n";
     header_buff += "Server: autoli's Web Server\r\n";
     header_buff += "\r\n";
@@ -230,13 +230,15 @@ HttpData::HttpData(EventLoop *loop, int connfd,connection_pool* sqlpool)
       nowReadPos_(0),
       state_(STATE_PARSE_URI),
       hState_(H_START),
-      keepAlive_(false) {//将读写时间与Httpdata事件绑定
+      keepAlive_(false),
+      m_connPool(sqlpool),
+      mysqlcon(&mysql,m_connPool) {//将读写时间与Httpdata事件绑定
   // loop_->queueInLoop(bind(&HttpData::setHandlers, this));
   //数据库初始化
   // m_connPool = connection_pool::GetInstance();
   // m_connPool->init("localhost", "root1", "123456", "web", 3306, 15, 0);//线程池的sql数量和日志是否关闭
-  m_connPool = sqlpool;
-  connectionRAII mysqlcon(&mysql, m_connPool); 
+  //m_connPool = sqlpool;
+  //connectionRAII mysqlcon(&mysql, m_connPool); 
   channel_->setReadHandler(bind(&HttpData::handleRead, this));
   channel_->setWriteHandler(bind(&HttpData::handleWrite, this));
   channel_->setConnHandler(bind(&HttpData::handleConn, this));
@@ -272,23 +274,18 @@ void HttpData::handleRead() {
   do {
     bool zero = false;
     int read_num = readn(fd_, inBuffer_, zero);
+    if(zero==true) cout<<"有关闭请求"<<endl;
     LOG << "Request: " << inBuffer_;
     if (connectionState_ == H_DISCONNECTING) {
       inBuffer_.clear();
       break;
     }
-    // cout << inBuffer_ << endl;
     if (read_num < 0) {
       perror("1");
       error_ = true;
       handleError(fd_, 400, "Bad Request");
       break;
     }
-    // else if (read_num == 0)
-    // {
-    //     error_ = true;
-    //     break;
-    // }
     else if (zero) {
       // 有请求出现但是读不到数据，可能是Request
       // Aborted，或者来自网络的数据没有达到等原因
@@ -391,11 +388,13 @@ void HttpData::handleRead() {
 void HttpData::handleWrite() {
   if (!error_ && connectionState_ != H_DISCONNECTED) {
     __uint32_t &events_ = channel_->getEvents();
+    cout<<outBuffer_<<endl;
     if (writen(fd_, outBuffer_) < 0) {
       perror("writen");
       events_ = 0;
       error_ = true;
     }
+    cout<<"还有多少美协"+outBuffer_.size()<<endl;
     if (outBuffer_.size() > 0) events_ |= EPOLLOUT;
   }
 }
@@ -410,17 +409,21 @@ void HttpData::handleConn() {
       if ((events_ & EPOLLIN) && (events_ & EPOLLOUT)) {
         events_ = __uint32_t(0);//清除
         events_ |= EPOLLOUT;
+        cout<<"清除"<<endl;
       }
+      cout<<"不清除"<<endl;
       // events_ |= (EPOLLET | EPOLLONESHOT);
       events_ |= EPOLLET;
       loop_->updatePoller(channel_, timeout);
 
     } else if (keepAlive_) {
+      cout<<"长连接"<<endl;
       events_ |= (EPOLLIN | EPOLLET);
       // events_ |= (EPOLLIN | EPOLLET | EPOLLONESHOT);
       int timeout = DEFAULT_KEEP_ALIVE_TIME;
       loop_->updatePoller(channel_, timeout);
     } else {
+      cout<<"短连接"<<endl;
       //要测试短连接，需要把下面注释的代码去掉注释
       // cout << "close normally" << endl;
       loop_->shutdown(channel_);
@@ -432,8 +435,10 @@ void HttpData::handleConn() {
     }
   } else if (!error_ && connectionState_ == H_DISCONNECTING &&
              (events_ & EPOLLOUT)) {
+    cout<<"没写完"<<endl;
     events_ = (EPOLLOUT | EPOLLET);
   } else {
+    cout<<"有错了关闭"<<endl;
     // cout << "close with errors" << endl;
     loop_->runInLoop(bind(&HttpData::handleClose, shared_from_this()));
   }
@@ -630,7 +635,11 @@ string HttpData::findkey(string startkey,int pos,string endkey)
 AnalysisState HttpData::analysisRequest() {
   // cout<<fileName_<<endl;
   // cout<<inBuffer_<<endl;
-
+  if (headers_.find("Connection") != headers_.end() &&
+  (headers_["Connection"] == "Keep-Alive" ||
+    headers_["Connection"] == "keep-alive")) {
+    keepAlive_ = true;
+  }
   if (method_ == METHOD_POST) {
     if(fileName_ == "login")//密码登陆
     {
@@ -919,7 +928,7 @@ AnalysisState HttpData::analysisRequest() {
       update_query += "'";
       update_query +=temp;
       update_query +="'";
-      cout<<update_query<<endl;
+      
       mysql_insertresult(m_connPool,update_query);
       
       getallmessage(fd_,"html/welcome.txt","html/welcome2.txt",temp);
@@ -1004,6 +1013,9 @@ AnalysisState HttpData::analysisRequest() {
     }
     if(fileName_ == "login"|| fileName_ == "index.html")
     {
+      //这里加了模拟访问数据库
+      string sql_query="SELECT user_id FROM user where username= '123' and passwd='456'";
+      MYSQL_RES  tmp = mysql_queryresult(m_connPool,sql_query);
       sendmessage(fd_,"html/log.html");
       return ANALYSIS_SUCCESS;
     }
@@ -1039,7 +1051,6 @@ AnalysisState HttpData::analysisRequest() {
     }
     char *src_addr = static_cast<char *>(mmapRet);
     outBuffer_ += string(src_addr, src_addr + sbuf.st_size);
-    ;
     munmap(mmapRet, sbuf.st_size);
     return ANALYSIS_SUCCESS;
   }

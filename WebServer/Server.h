@@ -23,6 +23,6 @@ class Server {
   int port_;
   int listenFd_;
   connection_pool *m_connPool;
-  int m_sql_num;
+  const int m_sql_num;
   static const int MAXFDS = 100000;//服务器最大连接数
 };

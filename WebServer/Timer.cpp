@@ -15,7 +15,7 @@ TimerNode::TimerNode(std::shared_ptr<HttpData> requestData, int timeout)
 // gettimeofday()会把目前的时间用tv 结构体返回，当地时区的信息则放到tz所指的结构中
   // 以毫秒计，计算好过期时间
   expiredTime_ =
-      (((now.tv_sec % 10000) * 1000) + (now.tv_usec / 1000)) + timeout;
+      (((now.tv_sec % 10000) * 1000) + (now.tv_usec / 1000)) + timeout;//有过期时间
 }
 
 TimerNode::~TimerNode() {
@@ -25,7 +25,7 @@ TimerNode::~TimerNode() {
 TimerNode::TimerNode(TimerNode &tn)//复制构造
     : SPHttpData(tn.SPHttpData), expiredTime_(0) {}
 
-void TimerNode::update(int timeout) {//更新时间
+void TimerNode::update(int timeout) {//延迟时间
   struct timeval now;
   gettimeofday(&now, NULL);
   expiredTime_ =
@@ -56,7 +56,7 @@ TimerManager::~TimerManager() {}
 void TimerManager::addTimer(std::shared_ptr<HttpData> SPHttpData, int timeout) {
   SPTimerNode new_node(new TimerNode(SPHttpData, timeout));
   timerNodeQueue.push(new_node);
-  SPHttpData->linkTimer(new_node);
+  SPHttpData->linkTimer(new_node);//将httpdata与timer绑定
 }
 
 /* 处理逻辑是这样的~
