@@ -12,7 +12,7 @@ const char* zero = digits + 9;
 
 // From muduo
 template <typename T>
-size_t convert(char buf[], T value) {
+size_t convert(char buf[], T value) {//将数值放入到字符buffer中
   T i = value;
   char* p = buf;
 
@@ -26,7 +26,7 @@ size_t convert(char buf[], T value) {
     *p++ = '-';
   }
   *p = '\0';
-  std::reverse(buf, p);
+  std::reverse(buf, p);//翻转
 
   return p - buf;
 }

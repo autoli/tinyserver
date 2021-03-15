@@ -40,8 +40,6 @@ void connection_pool::init(string url, string User, string PassWord, string DBNa
 		
 		if (con == NULL)
 		{
-			cout<<i<<endl;
-			cout<<"MYSQL ERRor"<<endl;
 			LOG<<("MySQL Error");
 			exit(1);
 		}
@@ -50,8 +48,6 @@ void connection_pool::init(string url, string User, string PassWord, string DBNa
 		
 		if (con == NULL)
 		{
-			cout<<i<<endl;
-			cout<<"MYSQL ERRor2";
 			LOG<<("MySQL Error");
 			exit(1);
 		}
@@ -73,7 +69,7 @@ MYSQL *connection_pool::GetConnection()
 
 	if (0 == connList.size())
 		return NULL;
-	cout<<m_FreeConn<<endl;
+	
 	reserve.wait();
 	
 	lock.lock();
@@ -83,7 +79,7 @@ MYSQL *connection_pool::GetConnection()
 
 	--m_FreeConn;
 	++m_CurConn;
-
+	//cout<<m_FreeConn<<endl;
 	lock.unlock();
 	return con;
 }

@@ -1,5 +1,4 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
+
 #include <getopt.h>
 #include <string>
 #include "EventLoop.h"
@@ -43,7 +42,7 @@ int main(int argc, char *argv[]) {
   
 // STL库在多线程上应用
 #ifndef _PTHREADS
-  LOG << "_PTHREADS is not defined !";
+  //LOG << "_PTHREADS is not defined !";
 #endif
   EventLoop mainLoop;
   Server myHTTPServer(&mainLoop, threadNum, port);

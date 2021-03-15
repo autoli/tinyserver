@@ -126,7 +126,7 @@ void HttpData::mysql_insertresult(connection_pool *connPool,string querystr)
     //在user表中检索username，passwd数据，浏览器端输入
     if (mysql_query(mysql, querystr.c_str()))
     {
-      LOG<<"INSERT error:"<<mysql_error(mysql)<<"\n";
+      //LOG<<"INSERT error:"<<mysql_error(mysql)<<"\n";
     }
 }
 
@@ -274,8 +274,8 @@ void HttpData::handleRead() {
   do {
     bool zero = false;
     int read_num = readn(fd_, inBuffer_, zero);
-    if(zero==true) cout<<"有关闭请求"<<endl;
-    LOG << "Request: " << inBuffer_;
+    
+    //LOG << "Request: " << inBuffer_;
     if (connectionState_ == H_DISCONNECTING) {
       inBuffer_.clear();
       break;
@@ -305,7 +305,7 @@ void HttpData::handleRead() {
         break;
       else if (flag == PARSE_URI_ERROR) {
         perror("2");
-        LOG << "FD = " << fd_ << "," << inBuffer_ << "******";
+        //LOG << "FD = " << fd_ << "," << inBuffer_ << "******";
         inBuffer_.clear();
         error_ = true;
         handleError(fd_, 400, "Bad Request");
@@ -388,13 +388,11 @@ void HttpData::handleRead() {
 void HttpData::handleWrite() {
   if (!error_ && connectionState_ != H_DISCONNECTED) {
     __uint32_t &events_ = channel_->getEvents();
-    cout<<outBuffer_<<endl;
     if (writen(fd_, outBuffer_) < 0) {
       perror("writen");
       events_ = 0;
       error_ = true;
     }
-    cout<<"还有多少美协"+outBuffer_.size()<<endl;
     if (outBuffer_.size() > 0) events_ |= EPOLLOUT;
   }
 }
@@ -409,36 +407,30 @@ void HttpData::handleConn() {
       if ((events_ & EPOLLIN) && (events_ & EPOLLOUT)) {
         events_ = __uint32_t(0);//清除
         events_ |= EPOLLOUT;
-        cout<<"清除"<<endl;
       }
-      cout<<"不清除"<<endl;
       // events_ |= (EPOLLET | EPOLLONESHOT);
       events_ |= EPOLLET;
       loop_->updatePoller(channel_, timeout);
 
     } else if (keepAlive_) {
-      cout<<"长连接"<<endl;
       events_ |= (EPOLLIN | EPOLLET);
       // events_ |= (EPOLLIN | EPOLLET | EPOLLONESHOT);
       int timeout = DEFAULT_KEEP_ALIVE_TIME;
       loop_->updatePoller(channel_, timeout);
     } else {
-      cout<<"短连接"<<endl;
       //要测试短连接，需要把下面注释的代码去掉注释
       // cout << "close normally" << endl;
-      loop_->shutdown(channel_);
-      loop_->runInLoop(bind(&HttpData::handleClose, shared_from_this()));
-      // events_ |= (EPOLLIN | EPOLLET);
-      // // events_ |= (EPOLLIN | EPOLLET | EPOLLONESHOT);
-      // int timeout = (DEFAULT_KEEP_ALIVE_TIME >> 1);
-      // loop_->updatePoller(channel_, timeout);
+      //loop_->shutdown(channel_);
+      //loop_->runInLoop(bind(&HttpData::handleClose, shared_from_this()));
+      events_ |= (EPOLLIN | EPOLLET);
+      // events_ |= (EPOLLIN | EPOLLET | EPOLLONESHOT);
+      int timeout = (DEFAULT_KEEP_ALIVE_TIME >> 1);
+      loop_->updatePoller(channel_, timeout);
     }
   } else if (!error_ && connectionState_ == H_DISCONNECTING &&
              (events_ & EPOLLOUT)) {
-    cout<<"没写完"<<endl;
     events_ = (EPOLLOUT | EPOLLET);
   } else {
-    cout<<"有错了关闭"<<endl;
     // cout << "close with errors" << endl;
     loop_->runInLoop(bind(&HttpData::handleClose, shared_from_this()));
   }
@@ -658,7 +650,7 @@ AnalysisState HttpData::analysisRequest() {
       sql_query +="and ";
       sql_query+="passwd=";
       sql_query += "'"+ password +"'";
-      LOG<<sql_query;
+      //LOG<<sql_query;
       MYSQL_RES  tmp = mysql_queryresult(m_connPool,sql_query);
       //从表中检索完整的结果集
       MYSQL_RES* result = &tmp;
@@ -717,7 +709,7 @@ AnalysisState HttpData::analysisRequest() {
       insert_query +=password;
       insert_query +="'";
       insert_query +=")";
-      LOG<<insert_query;
+      //LOG<<insert_query;
       mysql_insertresult(m_connPool,insert_query);
       sendmessage(fd_,"html/log.html");
       return ANALYSIS_SUCCESS;
@@ -760,7 +752,7 @@ AnalysisState HttpData::analysisRequest() {
         return ANALYSIS_ERROR;
       }
       string sql_query="SELECT user_id FROM user where username='"+name+"' and passwd='"+ password+"'";//注意此处自带引号，这是与html的form enctype="text/plain"有关
-      LOG<<sql_query;
+      //LOG<<sql_query;
       MYSQL_RES  tmp = mysql_queryresult(m_connPool,sql_query);
       
       //从表中检索完整的结果集
@@ -789,7 +781,7 @@ AnalysisState HttpData::analysisRequest() {
       insert_query +=webdes;
       insert_query +="'";
       insert_query +=")";
-      LOG<<insert_query;
+      //LOG<<insert_query;
       mysql_insertresult(m_connPool,insert_query);
       
       getallmessage(fd_,"html/welcome.txt","html/welcome2.txt",temp);
@@ -842,7 +834,7 @@ AnalysisState HttpData::analysisRequest() {
       delete_query += "'";
       delete_query +=webid;
       delete_query +="'";
-      LOG<<delete_query;
+      //LOG<<delete_query;
       mysql_insertresult(m_connPool,delete_query);
       
       getallmessage(fd_,"html/welcome.txt","html/welcome2.txt",temp);
@@ -983,6 +975,7 @@ AnalysisState HttpData::analysisRequest() {
 
     // echo test
     if (fileName_ == "hello") {
+       //keepAlive_ = false;
       //  char send_buff[4096];
       //  string header_buff,body_buff;
       //  body_buff+="Hello World";
@@ -992,7 +985,7 @@ AnalysisState HttpData::analysisRequest() {
       // header_buff += "Content-Length: " + to_string(body_buff.size()) + "\r\n";
       // header_buff += "Server: autoli's Web Server\r\n";
       // header_buff += "\r\n";
-      outBuffer_ = "HTTP/1.1 200 OK\r\nContent-type: text/plain\r\n\r\nHello World";
+      outBuffer_ = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\nConnection: Close\r\nContent-Length:11 \r\n\r\nHello World";
       // cout<<1<<endl;
       // sprintf(send_buff, "%s", header_buff.c_str());
       // writen(fd_, send_buff, strlen(send_buff));

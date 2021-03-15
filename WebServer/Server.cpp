@@ -9,7 +9,7 @@
 Server::Server(EventLoop *loop, int threadNum, int port)//这里主要完成了两步，一是用loop初始化了线程池，二是初始化了acceptChannel
     : loop_(loop),
       threadNum_(threadNum),
-      m_sql_num(150),
+      m_sql_num(1000),
       eventLoopThreadPool_(new EventLoopThreadPool(loop_, threadNum)),
       started_(false),
       acceptChannel_(new Channel(loop_)),
@@ -47,8 +47,8 @@ void Server::handNewConn() {
   while ((accept_fd = accept(listenFd_, (struct sockaddr *)&client_addr,
                              &client_addr_len)) > 0) {//此处的listenFd_是非阻塞的，如果返回值为-1，且errno == EAGAIN或errno == EWOULDBLOCK表示no connections没有新连接请求
     EventLoop *loop = eventLoopThreadPool_->getNextLoop();//从线程池里面拿一个loop
-    LOG << "New connection from " << inet_ntoa(client_addr.sin_addr) << ":"
-        << ntohs(client_addr.sin_port);
+    //LOG << "New connection from " << inet_ntoa(client_addr.sin_addr) << ":"
+        //<< ntohs(client_addr.sin_port);
     // 限制服务器的最大并发连接数
     if (accept_fd >= MAXFDS) {
       close(accept_fd);
@@ -56,7 +56,7 @@ void Server::handNewConn() {
     }
     // 设为非阻塞模式
     if (setSocketNonBlocking(accept_fd) < 0) {
-      LOG << "Set non block failed!";
+      //LOG << "Set non block failed!";
       // perror("Set non block failed!");
       return;
     }
