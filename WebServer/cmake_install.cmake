@@ -40,7 +40,6 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("/media/llaron/7E96ADB696AD6F79/代码/webserver/WebServer/WebServer/base/cmake_install.cmake")
-  include("/media/llaron/7E96ADB696AD6F79/代码/webserver/WebServer/WebServer/tests/cmake_install.cmake")
 
 endif()
 

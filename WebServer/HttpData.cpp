@@ -105,110 +105,97 @@ void MimeType::init() {
   mime["default"] = "text/html";
 }
 
-MYSQL_RES HttpData::mysql_queryresult(connection_pool *connPool,string querystr)
+void HttpData::mysql_queryresult(string &querystr)
 {
-    //先从连接池中取一个连接
-    // MYSQL *mysql = NULL;
-    // connectionRAII mysqlcon(&mysql, connPool);  
-    //在user表中检索username，passwd数据，浏览器端输入
+    if(mysql==NULL)
+    {
+      //LOG<<"mysql is NULL";
+    }
     if (mysql_query(mysql, querystr.c_str()))
     {
       LOG<<"SELECT error:"<<mysql_error(mysql)<<"\n";
     }
-    return *mysql_store_result(mysql);
 }
 
-void HttpData::mysql_insertresult(connection_pool *connPool,string querystr)
+void HttpData::mysql_insertresult(string &insertstr)
 {
-    //先从连接池中取一个连接
-    // MYSQL *mysql = NULL;
-    // connectionRAII mysqlcon(&mysql, connPool);  
-    //在user表中检索username，passwd数据，浏览器端输入
-    if (mysql_query(mysql, querystr.c_str()))
+    if(mysql==NULL)
     {
-      //LOG<<"INSERT error:"<<mysql_error(mysql)<<"\n";
+      //LOG<<"mysql is NULL";
+    }
+    if (mysql_query(mysql, insertstr.c_str()))
+    {
+      LOG<<"INSERT error:"<<mysql_error(mysql)<<"\n";
     }
 }
 
-string readFileIntoString(char * filename)
+void readFileIntoString(char * filename,string &buf)
 {
-ifstream ifile(filename);
-//将文件读入到ostringstream对象buf中
-ostringstream buf;
-char ch;
-while(buf&&ifile.get(ch))
-buf.put(ch);
-//返回与流对象buf关联的字符串
-return buf.str();
+    buf.reserve(buf.capacity()+10000);
+    ifstream ifile(filename);
+    char ch;
+    while(ifile.get(ch)) buf+=ch;
 }
 
-
-
-void sendmessage(int fd, string short_msg)
+void HttpData::sendmessage(int fd, string short_msg)
 {
-  char send_buff[40960];
   string header_buff;
   char * fn=(char*)short_msg.c_str();//这里如果用VS可能要来个强制转换(char*)"a.txt"
-  
-  header_buff += "HTTP/1.1 " + to_string(200) + "OK"+"\r\n";
+  string buf;
+  readFileIntoString(fn,buf);
+  header_buff += "HTTP/1.1 200 OK\r\n";
   header_buff += "Content-Type: text/html\r\n";
   header_buff += "Connection: keep-alive\r\n";
-  header_buff += "Content-Length: " + to_string(readFileIntoString(fn).size()) + "\r\n";
+  header_buff += "Content-Length: " + to_string(buf.size()) + "\r\n";
   header_buff += "Server: autoli's Web Server\r\n";
   header_buff += "\r\n";
-  sprintf(send_buff, "%s", header_buff.c_str());
-  writen(fd, send_buff, strlen(send_buff));
-  sprintf(send_buff, "%s",readFileIntoString(fn).c_str());
-  writen(fd, send_buff, strlen(send_buff));
+  outBuffer_+=header_buff;
+  outBuffer_+=buf;
 }
 
 void HttpData::getallmessage(int fd,string short_msg,string short_msg2,string userid)
 {
   char * fn=(char*)short_msg.c_str();//这里如果用VS可能要来个强制转换(char*)"a.txt"
-  char * fn2=(char*)short_msg2.c_str();//这里如果用VS可能要来个强制转换(char*)"a.txt"
-  string send_buff=readFileIntoString(fn);
-  char output_buff[40960];
+  char * fn2=(char*)short_msg2.c_str();
+  string send_buff;
+  readFileIntoString(fn,send_buff);
   string header_buff;
   string sql_query="SELECT web_id,web_name,log_name,log_pass,log_des FROM infos where user_id=";
-      sql_query += "'"+ userid +"'";
-     
-      MYSQL_RES  tmp = mysql_queryresult(m_connPool,sql_query);
-      //从表中检索完整的结果集
-      MYSQL_RES* result = &tmp;
-      //返回结果集中的列数
-      int num_fields = mysql_num_fields(result);
-      
-      //返回所有字段结构的数组
-      MYSQL_FIELD *fields = mysql_fetch_fields(result);
-      // string temp;
-      //从结果集中获取下一行，将对应的用户名和密码，存入map中
-      while (MYSQL_ROW row = mysql_fetch_row(result))
-      {
-        send_buff+="{";
-        for(int i=0;i<num_fields;i++)
-        {
-          send_buff +=fields[i].name;
-          send_buff +=":'";
-          send_buff +=row[i];
-          send_buff +="',";
-        }
-        send_buff+="},\r\n";      
-      };
-
-    send_buff+=readFileIntoString(fn2);
-    
-
-    header_buff += "HTTP/1.1 " + to_string(200) + "OK"+"\r\n";
-    header_buff += "Content-Type: text/html\r\n";
-    header_buff += "Connection: keep-alive\r\n";
-    header_buff += "Content-Length: " + to_string(send_buff.size()) + "\r\n";
-    header_buff += "Server: autoli's Web Server\r\n";
-    header_buff += "\r\n";
-
-    sprintf(output_buff, "%s", header_buff.c_str());
-    writen(fd, output_buff, strlen(output_buff));
-    sprintf(output_buff, "%s",send_buff.c_str());
-    writen(fd, output_buff, strlen(output_buff));
+  sql_query += "'"+ userid +"'";
+  mysql_queryresult(sql_query);
+  //从表中检索完整的结果集
+  SQLRES_RAII res(mysql);
+  MYSQL_RES* result = res.get();
+  //返回结果集中的列数
+  int num_fields = mysql_num_fields(result);
+  //返回所有字段结构的数组
+  MYSQL_FIELD *fields = mysql_fetch_fields(result);
+  //从结果集中获取下一行，将对应的用户名和密码，存入map中
+  while (MYSQL_ROW row = mysql_fetch_row(result))
+  {
+    send_buff+="{";
+    for(int i=0;i<num_fields;i++)
+    {
+      send_buff +=fields[i].name;
+      send_buff +=":'";
+      send_buff +=row[i];
+      send_buff +="',";
+    }
+    send_buff+="},\r\n";      
+  };
+  readFileIntoString(fn2,send_buff);
+  header_buff += "HTTP/1.1 " + to_string(200) + "OK"+"\r\n";
+  header_buff += "Content-Type: text/html\r\n";
+  header_buff += "Connection: keep-alive\r\n";
+  header_buff += "Content-Length: " + to_string(send_buff.size()) + "\r\n";
+  header_buff += "Server: autoli's Web Server\r\n";
+  header_buff += "\r\n";
+  outBuffer_+=header_buff;
+  outBuffer_+=send_buff;
+  // sprintf(output_buff, "%s", header_buff.c_str());
+  // writen(fd, output_buff, strlen(output_buff));
+  // sprintf(output_buff, "%s",send_buff.c_str());
+  // writen(fd, output_buff, strlen(output_buff));
 }
 
 std::string MimeType::getMime(const std::string &suffix) {
@@ -218,6 +205,7 @@ std::string MimeType::getMime(const std::string &suffix) {
   else
     return mime[suffix];
 }
+
 
 HttpData::HttpData(EventLoop *loop, int connfd,connection_pool* sqlpool)
     : loop_(loop),
@@ -234,11 +222,6 @@ HttpData::HttpData(EventLoop *loop, int connfd,connection_pool* sqlpool)
       m_connPool(sqlpool),
       mysqlcon(&mysql,m_connPool) {//将读写时间与Httpdata事件绑定
   // loop_->queueInLoop(bind(&HttpData::setHandlers, this));
-  //数据库初始化
-  // m_connPool = connection_pool::GetInstance();
-  // m_connPool->init("localhost", "root1", "123456", "web", 3306, 15, 0);//线程池的sql数量和日志是否关闭
-  //m_connPool = sqlpool;
-  //connectionRAII mysqlcon(&mysql, m_connPool); 
   channel_->setReadHandler(bind(&HttpData::handleRead, this));
   channel_->setWriteHandler(bind(&HttpData::handleWrite, this));
   channel_->setConnHandler(bind(&HttpData::handleConn, this));
@@ -420,12 +403,12 @@ void HttpData::handleConn() {
     } else {
       //要测试短连接，需要把下面注释的代码去掉注释
       // cout << "close normally" << endl;
-      //loop_->shutdown(channel_);
-      //loop_->runInLoop(bind(&HttpData::handleClose, shared_from_this()));
-      events_ |= (EPOLLIN | EPOLLET);
-      // events_ |= (EPOLLIN | EPOLLET | EPOLLONESHOT);
-      int timeout = (DEFAULT_KEEP_ALIVE_TIME >> 1);
-      loop_->updatePoller(channel_, timeout);
+      loop_->shutdown(channel_);
+      loop_->runInLoop(bind(&HttpData::handleClose, shared_from_this()));
+      //events_ |= (EPOLLIN | EPOLLET);
+      // // events_ |= (EPOLLIN | EPOLLET | EPOLLONESHOT);
+      //int timeout = (DEFAULT_KEEP_ALIVE_TIME >> 1);
+      //loop_->updatePoller(channel_, timeout);
     }
   } else if (!error_ && connectionState_ == H_DISCONNECTING &&
              (events_ & EPOLLOUT)) {
@@ -651,10 +634,9 @@ AnalysisState HttpData::analysisRequest() {
       sql_query+="passwd=";
       sql_query += "'"+ password +"'";
       //LOG<<sql_query;
-      MYSQL_RES  tmp = mysql_queryresult(m_connPool,sql_query);
-      //从表中检索完整的结果集
-      MYSQL_RES* result = &tmp;
-      
+      mysql_queryresult(sql_query);
+      SQLRES_RAII res(mysql);
+      MYSQL_RES* result = res.get();
       //返回结果集中的列数
       int num_fields = mysql_num_fields(result);   
       if(mysql_num_rows(result))
@@ -692,10 +674,12 @@ AnalysisState HttpData::analysisRequest() {
       }
       string sql_query="SELECT * FROM user where username=";
       sql_query +="'"+ name +"'";
-      MYSQL_RES  tmp = mysql_queryresult(m_connPool,sql_query);
-      
-      //从表中检索完整的结果集
-      MYSQL_RES* result = &tmp;
+      mysql_queryresult(sql_query);
+      SQLRES_RAII res(mysql);
+      MYSQL_RES* result = res.get();
+      // MYSQL_RES  tmp = mysql_queryresult(m_connPool,sql_query);
+      // //从表中检索完整的结果集
+      // MYSQL_RES* result = &tmp;
       if(mysql_num_rows(result))
       {
         sendmessage(fd_,"html/registerError.html");
@@ -710,8 +694,8 @@ AnalysisState HttpData::analysisRequest() {
       insert_query +="'";
       insert_query +=")";
       //LOG<<insert_query;
-      mysql_insertresult(m_connPool,insert_query);
-      sendmessage(fd_,"html/log.html");
+      mysql_insertresult(insert_query);
+      sendmessage(fd_,"html/registersuccess.html");
       return ANALYSIS_SUCCESS;
     }
     if(fileName_=="addData")
@@ -753,17 +737,18 @@ AnalysisState HttpData::analysisRequest() {
       }
       string sql_query="SELECT user_id FROM user where username='"+name+"' and passwd='"+ password+"'";//注意此处自带引号，这是与html的form enctype="text/plain"有关
       //LOG<<sql_query;
-      MYSQL_RES  tmp = mysql_queryresult(m_connPool,sql_query);
+      mysql_queryresult(sql_query);
+      SQLRES_RAII res(mysql);
+      MYSQL_RES* result = res.get();
+      // MYSQL_RES  tmp = mysql_queryresult(m_connPool,sql_query);
       
-      //从表中检索完整的结果集
-      MYSQL_RES* result = &tmp;
+      // //从表中检索完整的结果集
+      // MYSQL_RES* result = &tmp;
       string temp;
       while (MYSQL_ROW row = mysql_fetch_row(result))
       {
           temp=row[0];
       }
-      
-     
       string insert_query="INSERT INTO infos(user_id,web_name,log_name,log_pass,log_des) values(";
       insert_query += "'";
       insert_query +=temp;
@@ -782,8 +767,7 @@ AnalysisState HttpData::analysisRequest() {
       insert_query +="'";
       insert_query +=")";
       //LOG<<insert_query;
-      mysql_insertresult(m_connPool,insert_query);
-      
+      mysql_insertresult(insert_query);
       getallmessage(fd_,"html/welcome.txt","html/welcome2.txt",temp);
       return ANALYSIS_SUCCESS;
     }
@@ -808,9 +792,12 @@ AnalysisState HttpData::analysisRequest() {
       }
 
       string sql_query="SELECT user_id FROM user where username='"+name+"' and passwd='"+ password+"'";
-      MYSQL_RES  tmp = mysql_queryresult(m_connPool,sql_query);
-      //从表中检索完整的结果集
-      MYSQL_RES* result = &tmp;
+      mysql_queryresult(sql_query);
+      SQLRES_RAII res(mysql);
+      MYSQL_RES* result = res.get();
+      // MYSQL_RES  tmp = mysql_queryresult(m_connPool,sql_query);
+      // //从表中检索完整的结果集
+      // MYSQL_RES* result = &tmp;
       //返回结果集中的列数
       int num_fields = mysql_num_fields(result);
     
@@ -835,7 +822,7 @@ AnalysisState HttpData::analysisRequest() {
       delete_query +=webid;
       delete_query +="'";
       //LOG<<delete_query;
-      mysql_insertresult(m_connPool,delete_query);
+      mysql_insertresult(delete_query);
       
       getallmessage(fd_,"html/welcome.txt","html/welcome2.txt",temp);
       return ANALYSIS_SUCCESS;
@@ -882,9 +869,12 @@ AnalysisState HttpData::analysisRequest() {
      
 
       string sql_query="SELECT user_id FROM user where username='"+name+"' and passwd='"+ password+"'";
-      MYSQL_RES  tmp = mysql_queryresult(m_connPool,sql_query);
-      //从表中检索完整的结果集
-      MYSQL_RES* result = &tmp;
+      // MYSQL_RES  tmp = mysql_queryresult(m_connPool,sql_query);
+      // //从表中检索完整的结果集
+      // MYSQL_RES* result = &tmp;
+      mysql_queryresult(sql_query);
+      SQLRES_RAII res(mysql);
+      MYSQL_RES* result = res.get();
       //返回结果集中的列数
       int num_fields = mysql_num_fields(result);
 
@@ -921,7 +911,7 @@ AnalysisState HttpData::analysisRequest() {
       update_query +=temp;
       update_query +="'";
       
-      mysql_insertresult(m_connPool,update_query);
+      mysql_insertresult(update_query);
       
       getallmessage(fd_,"html/welcome.txt","html/welcome2.txt",temp);
       return ANALYSIS_SUCCESS;  
@@ -932,30 +922,7 @@ AnalysisState HttpData::analysisRequest() {
       return ANALYSIS_SUCCESS;  
     }
     return ANALYSIS_SUCCESS;
-    // ------------------------------------------------------
-    // My CV stitching handler which requires OpenCV library
-    // ------------------------------------------------------
-    // string header;
-    // header += string("HTTP/1.1 200 OK\r\n");
-    // if(headers_.find("Connection") != headers_.end() &&
-    // headers_["Connection"] == "Keep-Alive")
-    // {
-    //     keepAlive_ = true;
-    //     header += string("Connection: Keep-Alive\r\n") + "Keep-Alive:
-    //     timeout=" + to_string(DEFAULT_KEEP_ALIVE_TIME) + "\r\n";
-    // }
-    // int length = stoi(headers_["Content-length"]);
-    // vector<char> data(inBuffer_.begin(), inBuffer_.begin() + length);
-    // Mat src = imdecode(data, CV_LOAD_IMAGE_ANYDEPTH|CV_LOAD_IMAGE_ANYCOLOR);
-    // //imwrite("receive.bmp", src);
-    // Mat res = stitch(src);
-    // vector<uchar> data_encode;
-    // imencode(".png", res, data_encode);
-    // header += string("Content-length: ") + to_string(data_encode.size()) +
-    // "\r\n\r\n";
-    // outBuffer_ += header + string(data_encode.begin(), data_encode.end());
-    // inBuffer_ = inBuffer_.substr(length);
-    // return ANALYSIS_SUCCESS;
+
   } else if (method_ == METHOD_GET || method_ == METHOD_HEAD) {
     string header;
     header += "HTTP/1.1 200 OK\r\n";
@@ -975,22 +942,7 @@ AnalysisState HttpData::analysisRequest() {
 
     // echo test
     if (fileName_ == "hello") {
-       //keepAlive_ = false;
-      //  char send_buff[4096];
-      //  string header_buff,body_buff;
-      //  body_buff+="Hello World";
-      //  header_buff += "HTTP/1.1 " + to_string(200) + "OK"+"\r\n";
-      // header_buff += "Content-Type: text/html\r\n";
-      // header_buff += "Connection: Close\r\n";
-      // header_buff += "Content-Length: " + to_string(body_buff.size()) + "\r\n";
-      // header_buff += "Server: autoli's Web Server\r\n";
-      // header_buff += "\r\n";
-      outBuffer_ = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\nConnection: Close\r\nContent-Length:11 \r\n\r\nHello World";
-      // cout<<1<<endl;
-      // sprintf(send_buff, "%s", header_buff.c_str());
-      // writen(fd_, send_buff, strlen(send_buff));
-      // sprintf(send_buff, "%s", body_buff.c_str());
-      // writen(fd_, send_buff, strlen(send_buff));
+      outBuffer_ += "HTTP/1.1 200 OK\r\nContent-type: text/html\r\nConnection: Close\r\nContent-Length:11 \r\n\r\nHello World";
       return ANALYSIS_SUCCESS;
     }
     if (fileName_ == "favicon.ico") {
@@ -1004,14 +956,25 @@ AnalysisState HttpData::analysisRequest() {
       
       return ANALYSIS_SUCCESS;
     }
-    if(fileName_ == "login"|| fileName_ == "index.html")
+    if(fileName_ == "login"||fileName_ == "index.html"||fileName_ == "index")
     {
       //这里加了模拟访问数据库
       string sql_query="SELECT user_id FROM user where username= '123' and passwd='456'";
-      MYSQL_RES  tmp = mysql_queryresult(m_connPool,sql_query);
+      mysql_queryresult(sql_query);
+      SQLRES_RAII res(mysql);
       sendmessage(fd_,"html/log.html");
       return ANALYSIS_SUCCESS;
     }
+
+    // if(fileName_ == "index.html"||fileName_ == "index")
+    // {
+    //   string sql_query="SELECT user_id FROM user where username= '123' and passwd='456'";
+    //   mysql_queryresult(sql_query);
+    //   MYSQL_RES *result = mysql_store_result(mysql);
+    //   mysql_free_result(result);
+    //   outBuffer_ = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\nConnection: Close\r\nContent-Length:11 \r\n\r\nHello World";
+    //   return ANALYSIS_SUCCESS;
+    // }
     
     struct stat sbuf;
     if (stat(fileName_.c_str(), &sbuf) < 0) {

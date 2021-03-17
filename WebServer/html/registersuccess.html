@@ -5,7 +5,8 @@
         <title>Sign in</title>
         <script type="text/javascript">
             window.onload = function()
-            {               
+            {        
+                alert("注册成功，请登陆");       
                 //首先获得body中的3个input元素
                 var msgname = document.getElementById("msgname");
                 var msgpass = document.getElementById("msgpass");
@@ -32,7 +33,6 @@
                     document.body.appendChild(myForm);
                     myForm.submit();
                 };
-
             }
         </script>
     </head>

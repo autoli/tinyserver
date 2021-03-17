@@ -9,7 +9,7 @@
 Server::Server(EventLoop *loop, int threadNum, int port)//这里主要完成了两步，一是用loop初始化了线程池，二是初始化了acceptChannel
     : loop_(loop),
       threadNum_(threadNum),
-      m_sql_num(1000),
+      m_sql_num(100),
       eventLoopThreadPool_(new EventLoopThreadPool(loop_, threadNum)),
       started_(false),
       acceptChannel_(new Channel(loop_)),

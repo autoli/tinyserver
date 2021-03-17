@@ -23,6 +23,17 @@
                         alert("信息不能为空");
                     }
                 };
+                var retData = document.getElementById("reData");
+                retData.onclick = function()//存入数据
+                {
+                    var myForm=document.createElement('form');
+                    myForm.method='POST';
+                    myForm.action='register';
+                    myForm.enctype="text/plain";
+                    myForm.acceptCharset="UTF-8";
+                    document.body.appendChild(myForm);
+                    myForm.submit();
+                };
             }
         </script>
     </head>
@@ -35,7 +46,7 @@
                 <form action="login" method="post" enctype="text/plain" accept-charset="UTF-8">
                         <div align="center"><input id="msgname" type="text" name="user" placeholder="用户名" required="required"></div><br/>
                         <div align="center"><input id="msgpass" type="password" name="password" placeholder="登录密码" required="required"></div><br/>
-                        <div align="center"><button id="setData" type="submit">确定</button>  <button type="register" formaction="register" formnovalidate>注册</button></div>
+                        <div align="center"><button id="setData" type="submit">确定</button>  <button id="reData" type="button">注册</button></div>
                 </form>  
         </div>
     </body>

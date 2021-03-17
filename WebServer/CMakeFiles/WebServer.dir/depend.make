@@ -155,11 +155,11 @@ WebServer/CMakeFiles/WebServer.dir/Timer.cpp.o: WebServer/sql_connection_pool.h
 WebServer/CMakeFiles/WebServer.dir/Util.cpp.o: WebServer/Util.cpp
 WebServer/CMakeFiles/WebServer.dir/Util.cpp.o: WebServer/Util.h
 
-WebServer/CMakeFiles/WebServer.dir/sql_connection_pool.cc.o: WebServer/base/Condition.h
-WebServer/CMakeFiles/WebServer.dir/sql_connection_pool.cc.o: WebServer/base/LogStream.h
-WebServer/CMakeFiles/WebServer.dir/sql_connection_pool.cc.o: WebServer/base/Logging.h
-WebServer/CMakeFiles/WebServer.dir/sql_connection_pool.cc.o: WebServer/base/MutexLock.h
-WebServer/CMakeFiles/WebServer.dir/sql_connection_pool.cc.o: WebServer/base/noncopyable.h
-WebServer/CMakeFiles/WebServer.dir/sql_connection_pool.cc.o: WebServer/sql_connection_pool.cc
-WebServer/CMakeFiles/WebServer.dir/sql_connection_pool.cc.o: WebServer/sql_connection_pool.h
+WebServer/CMakeFiles/WebServer.dir/sql_connection_pool.cpp.o: WebServer/base/Condition.h
+WebServer/CMakeFiles/WebServer.dir/sql_connection_pool.cpp.o: WebServer/base/LogStream.h
+WebServer/CMakeFiles/WebServer.dir/sql_connection_pool.cpp.o: WebServer/base/Logging.h
+WebServer/CMakeFiles/WebServer.dir/sql_connection_pool.cpp.o: WebServer/base/MutexLock.h
+WebServer/CMakeFiles/WebServer.dir/sql_connection_pool.cpp.o: WebServer/base/noncopyable.h
+WebServer/CMakeFiles/WebServer.dir/sql_connection_pool.cpp.o: WebServer/sql_connection_pool.cpp
+WebServer/CMakeFiles/WebServer.dir/sql_connection_pool.cpp.o: WebServer/sql_connection_pool.h
 

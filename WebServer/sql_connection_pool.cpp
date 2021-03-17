@@ -40,15 +40,15 @@ void connection_pool::init(string url, string User, string PassWord, string DBNa
 		
 		if (con == NULL)
 		{
-			LOG<<("MySQL Error");
+			//LOG<<("MySQL Error");
 			exit(1);
 		}
 		
-		con = mysql_real_connect(con, url.c_str(), User.c_str(), PassWord.c_str(), DBName.c_str(), Port, NULL, 0);
+		con = mysql_real_connect(con, url.c_str(), User.c_str(), PassWord.c_str(), DBName.c_str(), Port+i, NULL, 0);
 		
 		if (con == NULL)
 		{
-			LOG<<("MySQL Error");
+			//LOG<<("MySQL Error");
 			exit(1);
 		}
 		
@@ -67,19 +67,24 @@ MYSQL *connection_pool::GetConnection()
 {
 	MYSQL *con = NULL;
 
-	if (0 == connList.size())
-		return NULL;
+	
 	
 	reserve.wait();
 	
+		
 	lock.lock();
+	if (0 == connList.size())//找到错误了
+	{
+		//LOG<<"连接池为空";
+		return NULL;
+	}
 
 	con = connList.front();
 	connList.pop_front();
-
+    
 	--m_FreeConn;
 	++m_CurConn;
-	//cout<<m_FreeConn<<endl;
+
 	lock.unlock();
 	return con;
 }
@@ -136,7 +141,6 @@ connection_pool::~connection_pool()
 
 connectionRAII::connectionRAII(MYSQL **SQL, connection_pool *connPool){
 	*SQL = connPool->GetConnection();
-	
 	conRAII = *SQL;
 	poolRAII = connPool;
 }

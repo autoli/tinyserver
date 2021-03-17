@@ -7,10 +7,9 @@ set(SRCS
     HttpData.cpp
     Main.cpp
     Server.cpp
-    #ThreadPool.cpp
     Timer.cpp
     Util.cpp
-    sql_connection_pool.cc
+    sql_connection_pool.cpp
 )
 set(LIBS
         mysqlclient #关键一步
@@ -25,4 +24,3 @@ target_link_libraries(WebServer ${LIBS})
 
 
 add_subdirectory(base)
-add_subdirectory(tests)

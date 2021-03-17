@@ -119,8 +119,25 @@ class HttpData : public std::enable_shared_from_this<HttpData> {
   URIState parseURI();
   HeaderState parseHeaders();
   AnalysisState analysisRequest();
-  MYSQL_RES mysql_queryresult(connection_pool *connPool,string querystr);
-  void mysql_insertresult(connection_pool *connPool,string querystr);
+  void mysql_queryresult(string &querystr); 
+  void mysql_insertresult(string &insertstr);
+  void sendmessage(int fd, string short_msg);
   void getallmessage(int fd,string short_msg,string short_msg2,string userid);
   string findkey(string startkey,int pos,string endkey);
+};
+
+class SQLRES_RAII{
+public:
+	SQLRES_RAII(MYSQL *mysql){
+    if(mysql==NULL)
+    {
+      LOG<<"mysql is null";
+    }
+    result=mysql_store_result(mysql);
+  };
+	~SQLRES_RAII(){mysql_free_result(result);}
+	MYSQL_RES *get(){return result;}
+
+private:
+	MYSQL_RES *result;
 };
